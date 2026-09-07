@@ -1,0 +1,3 @@
+db.url=jdbc:mysql://urls-for-your-database
+db.username=database-username
+db.password=database-password
