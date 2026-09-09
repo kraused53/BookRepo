@@ -223,6 +223,47 @@ public class DatabaseBook {
          *
          *    4) For each Author: add a row to the book_authors table
         */
+
+        if(isbn_exists(book.getIsbn())) {
+            System.out.println("This book is already in the database!");
+            return;
+        }
+
+        // Add book and author(s) to database
+        try ( Connection conn = Database.getConnection() ) {
+            // Generate query to store book info in book database
+            PreparedStatement save_book = conn.prepareStatement("INSERT INTO books (title, isbn, description) VALUES (?, ?, ?)");
+            save_book.setString(1, book.getTitle());
+            save_book.setString(2, book.getIsbn());
+            save_book.setString(3, book.getDescription());
+
+            // Execute query
+            save_book.executeUpdate();
+
+            // Get book ID from ISBN
+            int book_id = get_book_id_from_isbn(book.getIsbn());
+
+            for (Author author : book.getAuthors()) {
+                if(!author_exists(author.getName())) {
+                    // Add author to database
+                    PreparedStatement add_author = conn.prepareStatement("INSERT INTO authors (name) VALUES (?)");
+                    add_author.setString(1, author.getName());
+
+                    add_author.executeUpdate();
+                }
+
+                // Get author ID
+                int author_id = get_author_id_from_name(author.getName());
+
+                // Query to add book_author link
+                PreparedStatement add_book_author = conn.prepareStatement("INSERT INTO book_authors (book_id, author_id) VALUES (?, ?)");
+                add_book_author.setInt(1, book_id);
+                add_book_author.setInt(2, author_id);
+
+                add_book_author.executeUpdate();
+            }
+        }
+
     }
 
     /**
@@ -249,5 +290,119 @@ public class DatabaseBook {
          *        0) Remove the author's entry in the author table
          *       1+) Continue
          */
+    }
+
+    /* Utility */
+
+    /**
+     * This method queries the database to see if a specific ISBN exists in the books table.
+     *
+     * @param isbn The ISBN to search the database for. {@code String}
+     *
+     * @throws SQLException Throws SQL exception if there is an error connecting to the database
+     * @return Return true if the given ISBN is already in the database, else false {@code boolean}
+     */
+    boolean isbn_exists(String isbn) throws SQLException {
+        try(Connection conn = Database.getConnection() ){
+            // Prepare ISBN search query
+            PreparedStatement query = conn.prepareStatement("SELECT * FROM books WHERE isbn = ?");
+            query.setString(1, isbn);
+
+            // Execute query and store result
+            ResultSet isbn_set = query.executeQuery();
+
+            // Will be true if the query returns a book
+            return isbn_set.next();
+        }catch(SQLException e){
+            e.printStackTrace();
+            throw new SQLException("Error in isbn_exists");
+        }
+    }
+
+    /**
+     * This method queries the database to see if a specific author exists in the authors table.
+     *
+     * @param author_name The name of the author to search the database for. {@code String}
+     *
+     * @throws SQLException Throws SQL exception if there is an error connecting to the database
+     * @return Return true if the given author is already in the database, else false {@code boolean}
+     */
+    boolean author_exists(String author_name) throws SQLException {
+        try(Connection conn = Database.getConnection() ){
+            // Prepare ISBN search query
+            PreparedStatement query = conn.prepareStatement("SELECT * FROM authors WHERE name = ?");
+            query.setString(1, author_name);
+
+            // Execute query and store result
+            ResultSet isbn_set = query.executeQuery();
+
+            // Will be true if the query returns a book
+            return isbn_set.next();
+        }catch(SQLException e){
+            e.printStackTrace();
+            throw new SQLException("Error in author_exists");
+        }
+    }
+
+    /**
+     * This method queries the database to get the ID of a book by its isbn.
+     *
+     * @param isbn The ISBN of the book to search the database for. {@code String}
+     *
+     * @throws SQLException Throws SQL exception if there is an error connecting to the database
+     * @return Return ID or -1 if not found {@code int}
+     */
+    int get_book_id_from_isbn(String isbn) throws SQLException {
+        int id = -1;
+
+        try(Connection conn = Database.getConnection() ){
+            // Prepare ISBN search query
+            PreparedStatement query = conn.prepareStatement("SELECT id FROM books WHERE isbn = ?");
+            query.setString(1, isbn);
+
+            // Execute query and store result
+            ResultSet isbn_set = query.executeQuery();
+
+            if(isbn_set.next()) {
+                id = isbn_set.getInt("id");
+            }
+
+        }catch(SQLException e){
+            e.printStackTrace();
+            throw new SQLException("Error in get_book_id_from_isbn");
+        }
+
+        return id;
+    }
+
+    /**
+     * This method queries the database to get the ID of a book by its isbn.
+     *
+     * @param name The ISBN of the book to search the database for. {@code String}
+     *
+     * @throws SQLException Throws SQL exception if there is an error connecting to the database
+     * @return Return ID or -1 if not found {@code int}
+     */
+    int get_author_id_from_name(String name) throws SQLException {
+        int id = -1;
+
+        try(Connection conn = Database.getConnection() ){
+            // Prepare ISBN search query
+            PreparedStatement query = conn.prepareStatement("SELECT id FROM authors WHERE name = ?");
+            query.setString(1, name);
+
+            // Execute query and store result
+            ResultSet author_set = query.executeQuery();
+
+            if(author_set.next()) {
+                id = author_set.getInt("id");
+            }
+
+        }catch(SQLException e){
+            e.printStackTrace();
+            throw new SQLException("Error in get_author_id_from_name");
+        }
+
+        return id;
     }
 }
