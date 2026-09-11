@@ -162,4 +162,14 @@ public class Book {
         // Convert string builder to string and return.
         return sb.toString();
     }
+
+    /**
+     * This function returns true if the book has enough information to be valid. A book must have a title, an isbn,
+     *     and at least one author.
+     *
+     * @return Return if there is enough information for this book. {@code boolean}
+     */
+    public boolean isValid() {
+        return !title.isBlank() && !isbn.isBlank() && !authors.isEmpty();
+    }
 }
