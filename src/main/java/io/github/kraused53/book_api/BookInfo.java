@@ -25,8 +25,9 @@ public class BookInfo {
     public Book fetch_book_info(String isbn) throws IOException, InterruptedException {
         Book book = new Book();
 
-        String url =
-                "https://openlibrary.org/search.json?q="+ isbn +"&fields=title,author_name";
+        String url = APIConfig.getUrl() + "isbn:" + isbn + APIConfig.getKey();
+
+        System.out.println(url);
 
         HttpClient client = HttpClient.newHttpClient();
 
@@ -36,28 +37,25 @@ public class BookInfo {
         HttpResponse<String> response =
                 client.send(request, HttpResponse.BodyHandlers.ofString());
 
+
         ObjectMapper mapper = new ObjectMapper();
 
-        OpenLibraryResponse api_response = mapper.readValue(
+        GoogleBookResponse api_response = mapper.readValue(
                 response.body(),
-                OpenLibraryResponse.class
+                GoogleBookResponse.class
         );
 
-        List<OpenLibraryBook> results = api_response.get_list();
-
+        List<GoogleBook> results = api_response.get_list();
         if (results.isEmpty()) {
             System.out.println("Book not found.");
             return null;
         }
 
-        // Get first book
-        OpenLibraryBook apiBook = results.getFirst();
+        GoogleBook apiBook = results.getFirst();
 
-        // Fill in information
         book.setTitle(apiBook.getTitle());
-        book.setIsbn(isbn);
+        book.setIsbn(apiBook.getIsbn());
 
-        // Fill in authors
         for ( String a : apiBook.getAuthors() ) {
             Author author = new Author();
 
@@ -65,6 +63,7 @@ public class BookInfo {
 
             book.addAuthor(author);
         }
+
 
         return book;
     }

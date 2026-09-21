@@ -24,14 +24,13 @@ public class Main {
         BookInfo book_info = new BookInfo();
 
         // Add a new book to the library
-        Book book = book_info.fetch_book_info("9780316129084");
+        Book book = book_info.fetch_book_info("9798217180707");
 
         if (book == null || !book.isValid()) {
             System.out.println("Not a valid book!");
         }else {
             dbook.save(book);
         }
-        System.out.println("\n");
 
         // Fetch a list of all books in the database and print them
         List<Book> books = dbook.getAllBooks();
