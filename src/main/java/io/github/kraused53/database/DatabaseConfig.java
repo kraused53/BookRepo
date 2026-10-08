@@ -1,4 +1,4 @@
-package io.github.kraused53.Database;
+package io.github.kraused53.database;
 
 import java.io.FileInputStream;
 import java.io.IOException;

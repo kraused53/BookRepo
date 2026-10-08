@@ -1,4 +1,4 @@
-package io.github.kraused53.Database;
+package io.github.kraused53.database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
