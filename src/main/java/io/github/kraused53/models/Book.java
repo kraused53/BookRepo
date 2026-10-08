@@ -20,14 +20,19 @@ public class Book {
     private String title;
 
     /**
-     * The books ISBN - 10.
+     * The book's ISBN - 10.
      */
-    private String isbn_10;
+    private String isbn10;
 
     /**
-     * The books ISBN - 13.
+     * The book's ISBN - 13.
      */
-    private String isbn_13;
+    private String isbn13;
+
+    /**
+     * The book's page count
+     */
+    private int pageCount;
 
     /**
      * An optional description of the book.
@@ -58,14 +63,14 @@ public class Book {
      *
      * @return Book ISBN {@code String}
      */
-    public String getIsbn10() { return isbn_10; }
+    public String getIsbn10() { return isbn10; }
 
     /**
      * Return the ISBN 10 for this book.
      *
      * @return Book ISBN {@code String}
      */
-    public String getIsbn13() { return isbn_13; }
+    public String getIsbn13() { return isbn13; }
 
     /**
      * Return the description of this book.
@@ -82,6 +87,13 @@ public class Book {
     public int getId() { return id; }
 
     /**
+     * Return the page count for this book
+     *
+     * @return Book page count {@code int}
+     */
+    public int getPageCount() { return pageCount; }
+
+    /**
      * Return a List of this book's authors
      *
      * @return List of book authors {@code List<Author>}
@@ -89,7 +101,14 @@ public class Book {
     public List<Author> getAuthors() { return authors; }
 
     /**
-     * Set this book's ID.
+     * Set this book's page count.
+     *
+     * @param pageCount New book page count. {@code int}
+     */
+    public void setPageCount(int pageCount) { this.pageCount = pageCount; }
+
+    /**
+     * Set this book's page count.
      *
      * @param id New book ID. {@code int}
      */
@@ -107,14 +126,14 @@ public class Book {
      *
      * @param isbn_10 New book ISBN. {@code String}
      */
-    public void setIsbn10(String isbn_10) { this.isbn_10 = isbn_10; }
+    public void setIsbn10(String isbn_10) { this.isbn10 = isbn_10; }
 
     /**
      * Set this book's ISBN.
      *
      * @param isbn_13 New book ISBN. {@code String}
      */
-    public void setIsbn13(String isbn_13) { this.isbn_13 = isbn_13; }
+    public void setIsbn13(String isbn_13) { this.isbn13 = isbn_13; }
 
     /**
      * Set this book's description.
@@ -129,6 +148,46 @@ public class Book {
      * @param author New book author. {@code Author}
      */
     public void addAuthor(Author author) { this.authors.add(author); }
+
+    /**
+     * Check if the book object is valid.
+     *
+     * @return Return true if the book is valid, and false if not {@code boolean}
+     */
+    public boolean isValid() {
+        // The book is only valid when the title, one of the isbns, and the page count are not empty. Also, page
+        //      count must be positive
+
+        // Validate title
+        if(title == null || title.isBlank()) {
+            return false;
+        }
+
+        // Validate isbns. AT LEAST one must be valid. Both is fine
+        if(!isIsbn10Valid() && !isIsbn13Valid()) {
+            return false;
+        }
+
+        if (pageCount <= 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     *  Return true if isbn10 is valid
+     */
+    public boolean isIsbn10Valid() {
+        return (isbn10 != null) && (!isbn10.isBlank()) && (isbn10.length() != 10);
+    }
+
+    /**
+     *  Return true if isbn13 is valid
+     */
+    public boolean isIsbn13Valid() {
+        return (isbn13 != null) && (!isbn13.isBlank()) && (isbn13.length() != 13);
+    }
 
     /**
      * Override the String method for this class.
@@ -167,18 +226,18 @@ public class Book {
             sb.append(indent).append("\t").append(author).append("\n");
         }
 
-        if(isbn_10 != null && !isbn_10.isBlank() && isbn_13 != null && !isbn_13.isBlank()) {
+        if(isbn10 != null && !isbn10.isBlank() && isbn13 != null && !isbn13.isBlank()) {
             sb.append(indent).append("ISBNS:\n");
         }else {
             sb.append(indent).append("ISBN:\n");
         }
 
-        if(isbn_10 != null && !isbn_10.isBlank()) {
-            sb.append(indent).append("\tISBN-10: ").append(isbn_10).append("\n");
+        if(isbn10 != null && !isbn10.isBlank()) {
+            sb.append(indent).append("\tISBN-10: ").append(isbn10).append("\n");
         }
 
-        if(isbn_13 != null && !isbn_13.isBlank()) {
-            sb.append(indent).append("\tISBN-13: ").append(isbn_13).append("\n");
+        if(isbn13 != null && !isbn13.isBlank()) {
+            sb.append(indent).append("\tISBN-13: ").append(isbn13).append("\n");
         }
 
         if (description!=null && !description.isBlank()) {

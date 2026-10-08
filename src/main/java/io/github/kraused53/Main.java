@@ -5,7 +5,9 @@ import io.github.kraused53.models.Author;
 import io.github.kraused53.repository.author.AuthorRepository;
 import io.github.kraused53.exceptions.DuplicateEntryException;
 import io.github.kraused53.exceptions.EntryNotFoundException;
+import io.github.kraused53.repository.book.BookRepository;
 import io.github.kraused53.service.AuthorService;
+import io.github.kraused53.service.BookService;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -20,11 +22,13 @@ public class Main {
      */
     static void main() {
 
-        // Database access related to Authors
+        // Database access
         AuthorRepository authorRepository = new AuthorRepository();
+        BookRepository bookRepository = new BookRepository();
 
         // Business actions related to authors
         AuthorService authorService = new AuthorService(authorRepository);
+        BookService bookService = new BookService(bookRepository);
 
         // Fetch and print all authors
         List<Author> allAuthors = null;
