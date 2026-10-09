@@ -1,4 +1,4 @@
-package io.github.kraused53.service;
+package io.github.kraused53.service.book;
 
 import io.github.kraused53.exceptions.DuplicateEntryException;
 import io.github.kraused53.exceptions.EntryNotFoundException;
@@ -20,7 +20,7 @@ public class BookService {
     private final BookRepository bookRepository;
 
     /**
-     * The book repository class will be instantiated elsewhere and then connected here
+     * The book service class will be instantiated elsewhere and then connected here
      */
     public BookService(BookRepository bookRepository) {
         this.bookRepository = bookRepository;

@@ -1,13 +1,11 @@
 package io.github.kraused53;
 
-
 import io.github.kraused53.models.Author;
+import io.github.kraused53.models.Book;
 import io.github.kraused53.repository.author.AuthorRepository;
-import io.github.kraused53.exceptions.DuplicateEntryException;
-import io.github.kraused53.exceptions.EntryNotFoundException;
 import io.github.kraused53.repository.book.BookRepository;
-import io.github.kraused53.service.AuthorService;
-import io.github.kraused53.service.BookService;
+import io.github.kraused53.repository.book_authors.BookAuthorsRepository;
+import io.github.kraused53.service.library.LibraryService;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -25,102 +23,30 @@ public class Main {
         // Database access
         AuthorRepository authorRepository = new AuthorRepository();
         BookRepository bookRepository = new BookRepository();
+        BookAuthorsRepository bookAuthorsRepository = new BookAuthorsRepository();
 
-        // Business actions related to authors
-        AuthorService authorService = new AuthorService(authorRepository);
-        BookService bookService = new BookService(bookRepository);
+        // LibraryService API manager
+        LibraryService library = new LibraryService(bookRepository, authorRepository, bookAuthorsRepository);
 
-        // Fetch and print all authors
-        List<Author> allAuthors = null;
+        List<Book> books = getAllBooks(library);
 
-        // Existing authors
-        printAllAuthors(authorService);
-
-        // Add new author
-        Author newAuthor = new Author();
-        newAuthor.setName("Jim Bob");
-
-        System.out.println("Test add author");
-        try {
-            authorService.addAuthor(newAuthor);
-        } catch (SQLException add_error) {
-            throw new RuntimeException(add_error);
-        } catch (DuplicateEntryException add_error) {
-            System.out.println(add_error.getMessage());;
+        System.out.println("Books in library:");
+        for(Book b : books) {
+            System.out.println("\n==============================");
+            System.out.println(b.toString(1));
         }
-
-        printAllAuthors(authorService);
-
-        try {
-            allAuthors = authorService.getAllAuthors();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-
-        int updateId = 0;
-        for (Author a : allAuthors) {
-            if (a.getName().equals("Jim Bob")) {
-                updateId = a.getId();
-                break;
-            }
-        }
-
-
-        System.out.println("Test update author");
-        if(updateId == 0) {
-            System.out.println("Error!");
-        }else {
-            // Update Jim Bob to Tommy boy
-            try {
-                authorService.updateAuthor(updateId, "Tommy boy");
-            } catch (SQLException update_error) {
-                throw new RuntimeException(update_error);
-            } catch (DuplicateEntryException | EntryNotFoundException update_error) {
-                System.out.println(update_error.getMessage());
-            }
-
-            printAllAuthors(authorService);
-        }
-
-
-        System.out.println("Test delete author");
-        // Delete Tommy boy
-        if(updateId == 0) {
-            System.out.println("Error!");
-        }else {
-            // Update Jim Bob to Tommy boy
-            try {
-                authorService.deleteAuthor(updateId);
-            } catch (SQLException update_error) {
-                throw new RuntimeException(update_error);
-            } catch (DuplicateEntryException | EntryNotFoundException update_error) {
-                System.out.println(update_error.getMessage());
-            }
-
-            printAllAuthors(authorService);
-        }
-
-
     }
 
-    private static void printAllAuthors(AuthorService authorService) {
-        List<Author> allAuthors;
+    private static List<Book> getAllBooks(LibraryService library) {
+        List<Book> books;
+
         try {
-            allAuthors = authorService.getAllAuthors();
+            books = library.fetchAllBooksWithAuthors();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
-        System.out.println("All Database Authors:");
-        if(allAuthors.isEmpty()) {
-            System.out.println("\t<empty>");
-        }else {
-            for(Author a : allAuthors) {
-                System.out.println(a.toString(1));
-            }
-        }
-
-        System.out.println("\n");
+        return books;
     }
 
 }

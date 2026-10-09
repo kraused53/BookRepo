@@ -1,4 +1,4 @@
-package io.github.kraused53.service;
+package io.github.kraused53.service.author;
 
 import io.github.kraused53.repository.author.AuthorRepository;
 import io.github.kraused53.models.Author;
