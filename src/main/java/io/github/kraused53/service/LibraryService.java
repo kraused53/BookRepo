@@ -8,10 +8,15 @@ import io.github.kraused53.repository.author.AuthorRepository;
 import io.github.kraused53.repository.book.BookRepository;
 import io.github.kraused53.repository.book_authors.BookAuthorsRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.List;
 
 public class LibraryService {
+
+    // Define logging system
+    private static final Logger logger = LoggerFactory.getLogger(LibraryService.class);
 
     // Define system services
     private final BookRepository bookRepository;
@@ -36,6 +41,7 @@ public class LibraryService {
      * @throws SQLException Thrown if there is an error interacting with the database.
      */
     public List<Author> getAllAuthors() throws SQLException {
+        logger.info("LibraryService.getAllAuthors: Fetching all books.");
         return authorRepository.findAll();
     }
 
@@ -47,6 +53,7 @@ public class LibraryService {
      * @see AuthorRepository
      */
     public void addNewAuthor(Author author) throws SQLException, DuplicateEntryException {
+        logger.info("LibraryService.addNewAuthor: Adding author '{}' to the database.", author.getName());
         authorRepository.insert(author);
     }
 
@@ -58,6 +65,7 @@ public class LibraryService {
      * @see AuthorRepository
      */
     public void deleteAuthorById(int authorId) throws SQLException, DuplicateEntryException, EntryNotFoundException {
+        logger.info("LibraryService.deleteAuthorById: Deleting author with id: {}", authorId);
         authorRepository.delete(authorId);
     }
 
@@ -69,6 +77,7 @@ public class LibraryService {
      * @see AuthorRepository
      */
     public void deleteAuthor(Author author) throws SQLException, DuplicateEntryException, EntryNotFoundException {
+        logger.info("LibraryService.deleteAuthor: Deleting author with id: {}", author.getId());
         authorRepository.delete(author.getId());
     }
 
@@ -82,10 +91,12 @@ public class LibraryService {
      */
     public void updateAuthorName(int authorId, String newName) throws SQLException, DuplicateEntryException, EntryNotFoundException {
         if(authorId <= 0) {
+            logger.warn("LibraryService.updateAuthorName: Author ID must be greater than zero!");
             throw new IllegalArgumentException("Author id must be greater than zero!");
         }
 
         if (newName == null || newName.isBlank()) {
+            logger.warn("LibraryService.updateAuthorName: New author name can not be null or blank!");
             throw new IllegalArgumentException("An author's name can not be null or empty");
         }
         authorRepository.update(authorId, newName);
@@ -100,8 +111,12 @@ public class LibraryService {
      */
     public void updateAuthorName(Author author) throws SQLException, DuplicateEntryException, EntryNotFoundException {
         if(!author.isValid()) {
+            logger.warn("LibraryService.updateAuthorName: Author is invalid!");
             throw new IllegalArgumentException("Author id must be greater than zero!");
         }
+
+        logger.info("LibraryService.updateAuthorName: Changing Author [{}] name to '{}'", author.getId(), author.getName());
+
         authorRepository.update(author.getId(), author.getName());
     }
 
@@ -112,6 +127,7 @@ public class LibraryService {
      * @throws SQLException if there is an error accessing the database
      */
     public List<Book> fetchAllBooksWithAuthors() throws SQLException {
+        logger.info("LibraryService.fetchAllBooksWithAuthors: Fetching all books.");
         return bookAuthorsRepository.getAllBooks();
     }
 }

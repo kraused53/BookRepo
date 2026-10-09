@@ -1,5 +1,7 @@
 package io.github.kraused53.models;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +11,10 @@ import java.util.List;
  *
  */
 public class Book {
+
+    // Define logging system
+    private static final Logger logger = LoggerFactory.getLogger(Book.class);
+
     /**
      * The book's database ID. Used for database actions
      */
@@ -160,18 +166,22 @@ public class Book {
 
         // Validate title
         if(title == null || title.isBlank()) {
+            logger.warn("Book.isValid: Book title is invalid.");
             return false;
         }
 
         // Validate isbns. AT LEAST one must be valid. Both is fine
         if(!isIsbn10Valid() && !isIsbn13Valid()) {
+            logger.warn("Book.isValid: Both ISBNs are invalid.");
             return false;
         }
 
         if (pageCount <= 0) {
+            logger.warn("Book.isValid: Book page count is invalid.");
             return false;
         }
 
+        logger.debug("Book.isValid: Book is valid.");
         return true;
     }
 
@@ -179,14 +189,36 @@ public class Book {
      *  Return true if isbn10 is valid
      */
     public boolean isIsbn10Valid() {
-        return (isbn10 != null) && (!isbn10.isBlank()) && (isbn10.length() != 10);
+        if(isbn10 == null || isbn10.isBlank()) {
+            logger.warn("Book.isIsbn10Valid: ISBN-10 is either null or blank.");
+            return false;
+        }
+
+        if(isbn10.length() != 10) {
+            logger.warn("Book.isIsbn10Valid: ISBN-10 is not 10 characters long.");
+            return false;
+        }
+
+        logger.debug("Book.isIsbn10Valid: ISBN-10 is valid.");
+        return true;
     }
 
     /**
      *  Return true if isbn13 is valid
      */
     public boolean isIsbn13Valid() {
-        return (isbn13 != null) && (!isbn13.isBlank()) && (isbn13.length() != 13);
+        if(isbn13 == null || isbn13.isBlank()) {
+            logger.warn("Book.isIsbn13Valid: ISBN-13 is either null or blank.");
+            return false;
+        }
+
+        if(isbn13.length() != 13) {
+            logger.warn("Book.isIsbn13Valid: ISBN-13 is nt 13 characters long.");
+            return false;
+        }
+
+        logger.debug("Book.isIsbn13Valid: ISBN-13 is valid.");
+        return true;
     }
 
     /**

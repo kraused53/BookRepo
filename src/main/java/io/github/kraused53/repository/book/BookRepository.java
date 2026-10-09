@@ -5,6 +5,8 @@ import io.github.kraused53.exceptions.DuplicateEntryException;
 import io.github.kraused53.exceptions.EntryNotFoundException;
 import io.github.kraused53.models.Book;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,6 +19,9 @@ import java.util.List;
  * All SQL operations related to books are performed here.
  */
 public class BookRepository {
+
+    // Define logging system
+    private static final Logger logger = LoggerFactory.getLogger(BookRepository.class);
 
     /**
      * Nothing needs to be initialized when this class is instantiated.
@@ -37,6 +42,8 @@ public class BookRepository {
                 FROM books
                 """;
 
+        logger.info("BookRepository.findAll: Fetching all books.");
+
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
@@ -55,6 +62,7 @@ public class BookRepository {
             }
         }
 
+        logger.info("BookRepository.findAll: Found {} books.", result.size());
         return result;
     }
 
@@ -75,6 +83,8 @@ public class BookRepository {
                 WHERE id = ?
                 """;
 
+        logger.info("BookRepository.findById: Searching for a book with id: {}.", bookId);
+
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
@@ -82,9 +92,8 @@ public class BookRepository {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next()) {
-                    throw new EntryNotFoundException(
-                            "No book was found with id: " + bookId
-                    );
+                    logger.warn("BookRepository.findById: No book with id {} was found.", bookId);
+                    throw new EntryNotFoundException("No book was found with id: " + bookId);
                 }
 
                 Book book = new Book();
@@ -95,6 +104,8 @@ public class BookRepository {
                 book.setIsbn13(rs.getString("isbn_13"));
                 book.setPageCount(rs.getInt("page_count"));
                 book.setDescription(rs.getString("description"));
+
+                logger.info("BookRepository.findById: The book '{}' was found.", book.getTitle());
 
                 return book;
             }
@@ -117,6 +128,8 @@ public class BookRepository {
                 VALUES (?, ?, ?, ?, ?)
                 """;
 
+        logger.info("BookRepository.insert: Adding the book '{}' to the database.", book.getTitle());
+
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
@@ -130,6 +143,8 @@ public class BookRepository {
 
         } catch (SQLException e) {
             if (e.getErrorCode() == 1062) {
+
+                logger.warn("BookRepository.insert: This book is already in the database.");
                 throw new DuplicateEntryException(
                         "A book with a matching ISBN or other unique value "
                                 + "already exists in the database!"
@@ -138,6 +153,8 @@ public class BookRepository {
 
             throw e;
         }
+
+        logger.info("BookRepository.insert: The book was added to the database.");
     }
 
     /**
@@ -163,6 +180,8 @@ public class BookRepository {
                 WHERE id = ?
                 """;
 
+        logger.info("BookRepository.update: Updating the book with id: {}", bookId);
+
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
@@ -179,14 +198,19 @@ public class BookRepository {
                 // MySQL may report zero when the record exists but no
                 // values changed, so verify whether the ID exists.
                 if (!existsById(conn, bookId)) {
+                    logger.warn("BookRepository.update: This book was not found.");
                     throw new EntryNotFoundException(
                             "No book was found with id: " + bookId
                     );
                 }
+
+                logger.info("BookRepository.update: There was nothing to update.");
             }
 
         } catch (SQLException e) {
             if (e.getErrorCode() == 1062) {
+
+                logger.warn("BookRepository.update: This update would have caused an isbn overlap. No records altered.");
                 throw new DuplicateEntryException(
                         "A book with a matching ISBN or other unique value "
                                 + "already exists in the database!"
@@ -195,6 +219,8 @@ public class BookRepository {
 
             throw e;
         }
+
+        logger.info("BookRepository.update: The book was updated.");
     }
 
     /**
@@ -209,6 +235,8 @@ public class BookRepository {
 
         String query = "DELETE FROM books WHERE id = ?";
 
+        logger.info("BookRepository.delete: Deleting the book with id: {}", bookId);
+
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
 
@@ -217,11 +245,13 @@ public class BookRepository {
             int rows = stmt.executeUpdate();
 
             if (rows == 0) {
+                logger.warn("BookRepository.delete: The book was not found.");
                 throw new EntryNotFoundException(
                         "No book was found with id: " + bookId
                 );
             }
         }
+        logger.info("BookRepository.delete: The book was deleted.");
     }
 
     /**
@@ -238,11 +268,21 @@ public class BookRepository {
 
         String query = "SELECT 1 FROM books WHERE id = ?";
 
+        logger.debug("BookRepository.existsById: Looking for a book with id: {}", bookId);
+
         try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, bookId);
 
             try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next();
+                boolean found = rs.next();
+
+                if(found) {
+                    logger.debug("BookRepository.existsById: Book found");
+                    return true;
+                }
+
+                logger.debug("BookRepository.existsById: Book not found");
+                return false;
             }
         }
     }

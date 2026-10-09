@@ -24,6 +24,11 @@
             <artifactId>mysql-connector-j</artifactId>
             <version>26.7.0</version> <!-- Compatible with modern JDKs including Java 25 -->
         </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.5.20</version>
+        </dependency>
     </dependencies>
 
     <build>

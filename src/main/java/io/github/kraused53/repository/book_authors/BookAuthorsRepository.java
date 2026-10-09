@@ -4,6 +4,8 @@ import io.github.kraused53.database.Database;
 import io.github.kraused53.models.Author;
 import io.github.kraused53.models.Book;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,6 +17,9 @@ import java.util.*;
  * All SQL operations related to book/author sets are performed here.
  */
 public class BookAuthorsRepository {
+
+    // Define logging system
+    private static final Logger logger = LoggerFactory.getLogger(BookAuthorsRepository.class);
 
     /**
      * Nothing needs to be initialized when this class is instantiated.
@@ -30,6 +35,8 @@ public class BookAuthorsRepository {
         Map<Integer, Book> books = new LinkedHashMap<>();
 
         String query = "SELECT b.id AS book_id, b.title AS title, b.isbn_13 AS isbn_13, b.isbn_10 AS isbn_10, b.page_count AS page_count, b.description AS description, a.id AS author_id, a.name AS name FROM jbook.books b INNER JOIN jbook.book_authors ba ON ba.book_id = b.id INNER JOIN jbook.authors a ON a.id = ba.author_id ORDER BY b.id";
+
+        logger.info("BookAuthorRepository.getAllBooks: Fetching all books.");
 
         try (Connection conn = Database.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query);
@@ -54,6 +61,7 @@ public class BookAuthorsRepository {
             }
         }
 
+        logger.info("BookAuthorRepository.getAllBooks: Found {} books!", books.size());
         return new ArrayList<>(books.values());
     }
 

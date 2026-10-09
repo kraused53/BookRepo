@@ -1,9 +1,16 @@
 package io.github.kraused53.models;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * The author class stores all the information needed by the BookRepo database.
  */
 public class Author {
+
+    // Define logging system
+    private static final Logger logger = LoggerFactory.getLogger(Author.class);
+
     /**
      * The author's database ID. Used for database actions.
      */
@@ -83,7 +90,13 @@ public class Author {
      * @return Return true if the author is valid, and false if not {@code boolean}
      */
     public boolean isValid() {
+
+        if(name == null || name.isBlank()) {
+            logger.warn("Author.isValid: Author name is not valid.");
+        }
+
+        logger.debug("Author.isValid: Author is valid.");
         // The author is only valid if the name field is not null or blank
-        return name != null && !name.isBlank();
+        return true;
     }
 }
