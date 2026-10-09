@@ -1,4 +1,4 @@
-package io.github.kraused53.service.library;
+package io.github.kraused53.service;
 
 import io.github.kraused53.exceptions.DuplicateEntryException;
 import io.github.kraused53.exceptions.EntryNotFoundException;
@@ -7,9 +7,6 @@ import io.github.kraused53.models.Book;
 import io.github.kraused53.repository.author.AuthorRepository;
 import io.github.kraused53.repository.book.BookRepository;
 import io.github.kraused53.repository.book_authors.BookAuthorsRepository;
-import io.github.kraused53.service.author.AuthorService;
-import io.github.kraused53.service.book.BookService;
-import io.github.kraused53.service.book_authors.BookAuthorsService;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -17,18 +14,18 @@ import java.util.List;
 public class LibraryService {
 
     // Define system services
-    private final BookService bookService;
-    private final AuthorService authorService;
-    private final BookAuthorsService bookAuthorsService;
+    private final BookRepository bookRepository;
+    private final AuthorRepository authorRepository;
+    private final BookAuthorsRepository bookAuthorsRepository;
 
     public LibraryService(
             BookRepository bookRepository,
             AuthorRepository authorRepository,
             BookAuthorsRepository bookAuthorsRepository
     ) {
-        this.bookService = new BookService(bookRepository);
-        this.authorService = new AuthorService(authorRepository);
-        this.bookAuthorsService = new BookAuthorsService(bookAuthorsRepository);
+        this.bookRepository = bookRepository;
+        this.authorRepository = authorRepository;
+        this.bookAuthorsRepository = bookAuthorsRepository;
     }
 
     /* These functions simply link to functions inside the nnnService classes */
@@ -39,7 +36,7 @@ public class LibraryService {
      * @throws SQLException Thrown if there is an error interacting with the database.
      */
     public List<Author> getAllAuthors() throws SQLException {
-        return authorService.getAllAuthors();
+        return authorRepository.findAll();
     }
 
     /**
@@ -50,7 +47,7 @@ public class LibraryService {
      * @see AuthorRepository
      */
     public void addNewAuthor(Author author) throws SQLException, DuplicateEntryException {
-        authorService.addAuthor(author);
+        authorRepository.insert(author);
     }
 
     /**
@@ -61,7 +58,18 @@ public class LibraryService {
      * @see AuthorRepository
      */
     public void deleteAuthorById(int authorId) throws SQLException, DuplicateEntryException, EntryNotFoundException {
-        authorService.deleteAuthor(authorId);
+        authorRepository.delete(authorId);
+    }
+
+    /**
+     * Insert a new author into the database
+     *
+     * @param author The author to delete
+     * @throws SQLException if the database operation fails
+     * @see AuthorRepository
+     */
+    public void deleteAuthor(Author author) throws SQLException, DuplicateEntryException, EntryNotFoundException {
+        authorRepository.delete(author.getId());
     }
 
     /**
@@ -80,7 +88,7 @@ public class LibraryService {
         if (newName == null || newName.isBlank()) {
             throw new IllegalArgumentException("An author's name can not be null or empty");
         }
-        authorService.updateAuthor(authorId, newName);
+        authorRepository.update(authorId, newName);
     }
 
     /**
@@ -94,7 +102,7 @@ public class LibraryService {
         if(!author.isValid()) {
             throw new IllegalArgumentException("Author id must be greater than zero!");
         }
-        authorService.updateAuthor(author.getId(), author.getName());
+        authorRepository.update(author.getId(), author.getName());
     }
 
     /**
@@ -104,6 +112,6 @@ public class LibraryService {
      * @throws SQLException if there is an error accessing the database
      */
     public List<Book> fetchAllBooksWithAuthors() throws SQLException {
-        return bookAuthorsService.getAllBooks();
+        return bookAuthorsRepository.getAllBooks();
     }
 }

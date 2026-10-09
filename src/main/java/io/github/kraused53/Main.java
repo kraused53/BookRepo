@@ -1,11 +1,10 @@
 package io.github.kraused53;
 
-import io.github.kraused53.models.Author;
 import io.github.kraused53.models.Book;
 import io.github.kraused53.repository.author.AuthorRepository;
 import io.github.kraused53.repository.book.BookRepository;
 import io.github.kraused53.repository.book_authors.BookAuthorsRepository;
-import io.github.kraused53.service.library.LibraryService;
+import io.github.kraused53.service.LibraryService;
 
 import java.sql.SQLException;
 import java.util.List;
