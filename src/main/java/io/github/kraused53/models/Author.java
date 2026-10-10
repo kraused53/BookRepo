@@ -96,6 +96,11 @@ public class Author {
             return false;
         }
 
+        if(id < 1) {
+            logger.warn("Author.isValid: Author id is not valid.");
+            return false;
+        }
+
         logger.debug("Author.isValid: Author is valid.");
         // The author is only valid if the name field is not null or blank
         return true;
