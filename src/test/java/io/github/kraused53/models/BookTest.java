@@ -1,7 +1,6 @@
 package io.github.kraused53.models;
 
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class BookTest {
