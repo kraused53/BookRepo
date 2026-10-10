@@ -1,5 +1,8 @@
 package io.github.kraused53.models;
 
+import io.github.kraused53.exceptions.InvalidISBNException;
+import io.github.kraused53.utils.ISBNValidator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
@@ -130,27 +133,26 @@ public class Book {
     /**
      * Set this book's ISBN.
      *
-     * @param isbn_10 New book ISBN. {@code String}
+     * @param isbn10 New book ISBN. {@code String}
      */
-    public void setIsbn10(String isbn_10) {
-        // Leave blank ISBNs as null for database uniqueness testing
-        if(isbn_10 == null || isbn_10.isBlank()) {
+    public void setIsbn10(String isbn10) {
+        try {
+            this.isbn10 = ISBNValidator.validateISBN10(isbn10);
+        } catch (InvalidISBNException e) {
             this.isbn10 = null;
-        }else {
-            this.isbn10 = isbn_10;
         }
     }
 
     /**
      * Set this book's ISBN.
      *
-     * @param isbn_13 New book ISBN. {@code String}
+     * @param isbn13 New book ISBN. {@code String}
      */
-    public void setIsbn13(String isbn_13) { // Leave blank ISBNs as null for database uniqueness testing
-        if(isbn_13 == null || isbn_13.isBlank()) {
+    public void setIsbn13(String isbn13) { // Leave blank ISBNs as null for database uniqueness testing
+        try {
+            this.isbn13 = ISBNValidator.validateISBN13(isbn13);
+        } catch (InvalidISBNException e) {
             this.isbn13 = null;
-        }else {
-            this.isbn13 = isbn_13;
         }
     }
 
@@ -207,13 +209,9 @@ public class Book {
      *  Return true if isbn10 is valid
      */
     public boolean isIsbn10Valid() {
-        if(isbn10 == null || isbn10.isBlank()) {
-            logger.warn("Book.isIsbn10Valid: ISBN-10 is either null or blank.");
-            return false;
-        }
-
-        if(isbn10.length() != 10) {
-            logger.warn("Book.isIsbn10Valid: ISBN-10 is not 10 characters long.");
+        try {
+            ISBNValidator.validateISBN10(isbn10);
+        } catch (InvalidISBNException e) {
             return false;
         }
 
@@ -225,13 +223,9 @@ public class Book {
      *  Return true if isbn13 is valid
      */
     public boolean isIsbn13Valid() {
-        if(isbn13 == null || isbn13.isBlank()) {
-            logger.warn("Book.isIsbn13Valid: ISBN-13 is either null or blank.");
-            return false;
-        }
-
-        if(isbn13.length() != 13) {
-            logger.warn("Book.isIsbn13Valid: ISBN-13 is nt 13 characters long.");
+        try {
+            ISBNValidator.validateISBN13(isbn13);
+        } catch (InvalidISBNException e) {
             return false;
         }
 
