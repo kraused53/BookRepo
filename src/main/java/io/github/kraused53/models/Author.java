@@ -93,6 +93,7 @@ public class Author {
 
         if(name == null || name.isBlank()) {
             logger.warn("Author.isValid: Author name is not valid.");
+            return false;
         }
 
         logger.debug("Author.isValid: Author is valid.");

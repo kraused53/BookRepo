@@ -149,7 +149,7 @@ public class LibraryService {
     }
 
     public void addBook(Book book)
-            throws SQLException, IllegalArgumentException {
+            throws SQLException, IllegalArgumentException, DuplicateEntryException {
 
         try (Connection conn = Database.getConnection()) {
             conn.setAutoCommit(false);
@@ -163,7 +163,7 @@ public class LibraryService {
                     );
 
                     conn.rollback();
-                    return;
+                    throw new DuplicateEntryException("This book already exists in the database!");
                 }
 
                 List<Author> authors = book.getAuthors();

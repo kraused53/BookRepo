@@ -1,5 +1,6 @@
 package io.github.kraused53;
 
+import io.github.kraused53.exceptions.DuplicateEntryException;
 import io.github.kraused53.exceptions.EntryNotFoundException;
 import io.github.kraused53.models.Author;
 import io.github.kraused53.models.Book;
@@ -44,16 +45,7 @@ public class Main {
         book.setPageCount(320);
         book.addAuthor(author);
 
-        try {
-            library.addBook(book);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalArgumentException e) {
-            System.out.println("This book is not valid!");
-        }
-
-        books = getAllBooks(library);
-        printAllBooks(books);
+        book.isValid();
     }
 
     private static List<Book> getAllBooks(LibraryService library) {

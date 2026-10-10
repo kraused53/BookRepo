@@ -132,14 +132,27 @@ public class Book {
      *
      * @param isbn_10 New book ISBN. {@code String}
      */
-    public void setIsbn10(String isbn_10) { this.isbn10 = isbn_10; }
+    public void setIsbn10(String isbn_10) {
+        // Leave blank ISBNs as null for database uniqueness testing
+        if(isbn_10 == null || isbn_10.isBlank()) {
+            this.isbn10 = null;
+        }else {
+            this.isbn10 = isbn_10;
+        }
+    }
 
     /**
      * Set this book's ISBN.
      *
      * @param isbn_13 New book ISBN. {@code String}
      */
-    public void setIsbn13(String isbn_13) { this.isbn13 = isbn_13; }
+    public void setIsbn13(String isbn_13) { // Leave blank ISBNs as null for database uniqueness testing
+        if(isbn_13 == null || isbn_13.isBlank()) {
+            this.isbn13 = null;
+        }else {
+            this.isbn13 = isbn_13;
+        }
+    }
 
     /**
      * Set this book's description.
