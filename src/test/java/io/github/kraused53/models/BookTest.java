@@ -97,19 +97,6 @@ class BookTest {
         assertFalse(book.isValid());
     }
 
-    @Test
-    void bookIsValidNoAuthors() {
-        Book book = new Book();
-        book.setId(12345);
-        book.setTitle("The Hobbit");
-        book.setIsbn10("0345339681");
-        book.setIsbn13("9780345339683");
-        book.setPageCount(320);
-        book.setDescription("book description");
-
-        assertFalse(book.isValid());
-    }
-
     // Utilities
     private Book makeTestBook() {
         Book book = new Book();

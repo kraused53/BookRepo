@@ -196,11 +196,6 @@ public class Book {
             return false;
         }
 
-        if(authors.isEmpty()) {
-            logger.warn("Book.isValid: Book must have at least one author.");
-            return false;
-        }
-
         logger.debug("Book.isValid: Book is valid.");
         return true;
     }
