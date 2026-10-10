@@ -3,5 +3,6 @@
   <component name="DataSourcePerFileMappings">
     <file url="file://$PROJECT_DIR$/src/main/java/io/github/kraused53/repository/author/AuthorRepository.java" value="123242a9-133f-4e72-b4b5-8e358f5ab9a5" />
     <file url="file://$PROJECT_DIR$/src/main/java/io/github/kraused53/repository/book/BookRepository.java" value="123242a9-133f-4e72-b4b5-8e358f5ab9a5" />
+    <file url="file://$PROJECT_DIR$/src/main/java/io/github/kraused53/repository/book_authors/BookAuthorsRepository.java" value="123242a9-133f-4e72-b4b5-8e358f5ab9a5" />
   </component>
 </project>

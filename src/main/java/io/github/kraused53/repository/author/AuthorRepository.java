@@ -8,10 +8,7 @@ import io.github.kraused53.exceptions.EntryNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -133,10 +130,11 @@ public class AuthorRepository {
      * Insert a new author into the database.
      *
      * @param author the author to insert.
+     * @return the ID of the newly inserted author.
      * @throws SQLException if the database operation fails.
      * @throws DuplicateEntryException if an author violates a unique constraint.
      */
-    public void insert(Author author)
+    public int insert(Author author)
             throws SQLException, DuplicateEntryException {
 
         String query = "INSERT INTO authors (name) VALUES (?)";
@@ -147,11 +145,33 @@ public class AuthorRepository {
         );
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+             PreparedStatement stmt = conn.prepareStatement(
+                     query,
+                     Statement.RETURN_GENERATED_KEYS
+             )) {
 
             stmt.setString(1, author.getName());
 
             stmt.executeUpdate();
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    int authorId = generatedKeys.getInt(1);
+
+                    logger.info(
+                            "AuthorRepository.insert: Author '{}' added with ID {}.",
+                            author.getName(),
+                            authorId
+                    );
+
+                    return authorId;
+                }
+
+                throw new SQLException(
+                        "Failed to retrieve the generated ID for author '"
+                                + author.getName() + "'."
+                );
+            }
 
         } catch (SQLException e) {
             if (e.getErrorCode() == 1062) {
@@ -173,11 +193,75 @@ public class AuthorRepository {
 
             throw e;
         }
+    }
+
+    /**
+     * Insert a new author into the database.
+     *
+     * @param conn Shared database connection. allows the caller to better handle situations where an operation needs to be rolled-back
+     * @param author the author to insert.
+     * @return the ID of the newly inserted author.
+     * @throws SQLException if the database operation fails.
+     * @throws DuplicateEntryException if an author violates a unique constraint.
+     */
+    public int insert(Connection conn, Author author)
+            throws SQLException, DuplicateEntryException {
+
+        String query = "INSERT INTO authors (name) VALUES (?)";
 
         logger.info(
-                "AuthorRepository.insert: The author '{}' was added to the database.",
+                "AuthorRepository.insert: Adding the author '{}' to the database.",
                 author.getName()
         );
+
+        try (PreparedStatement stmt = conn.prepareStatement(
+                     query,
+                     Statement.RETURN_GENERATED_KEYS
+             )) {
+
+            stmt.setString(1, author.getName());
+
+            stmt.executeUpdate();
+
+            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    int authorId = generatedKeys.getInt(1);
+
+                    logger.info(
+                            "AuthorRepository.insert: Author '{}' added with ID {}.",
+                            author.getName(),
+                            authorId
+                    );
+
+                    return authorId;
+                }
+
+                throw new SQLException(
+                        "Failed to retrieve the generated ID for author '"
+                                + author.getName() + "'."
+                );
+            }
+
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 1062) {
+                logger.warn(
+                        "AuthorRepository.insert: The author '{}' already exists in the database.",
+                        author.getName()
+                );
+
+                throw new DuplicateEntryException(
+                        "An author with this name already exists in the database!"
+                );
+            }
+
+            logger.error(
+                    "AuthorRepository.insert: Failed to add author '{}'.",
+                    author.getName(),
+                    e
+            );
+
+            throw e;
+        }
     }
 
     /**
@@ -304,6 +388,80 @@ public class AuthorRepository {
                 "AuthorRepository.delete: The author with id {} was deleted.",
                 authorId
         );
+    }
+
+    /**
+     * Fetch an author from the database by searching for a specific name. This is mostly to be used internally, so
+     *      It looks for exact matches, and not partial matches. If more than one entry is found, the first one will
+     *      be the one that is returned.
+     *
+     * @param name The name of the author to look for.
+     * @throws SQLException on SQL error
+     * @throws EntryNotFoundException if the query returns no results
+     */
+    public Author lookupByName(String name) throws SQLException, EntryNotFoundException {
+        Author author = new Author();
+
+        String query = "SELECT id, name FROM authors WHERE name = ?";
+
+        logger.info("AuthorRepository.lookupByName: Looking for the author named '{}'", name);
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            // Fill in the name
+            stmt.setString(1, name);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new EntryNotFoundException(
+                            "Could not find an author named " + name
+                    );
+                }
+
+                author.setId(rs.getInt("id"));
+                author.setName(rs.getString("name"));
+            }
+        }
+
+        return author;
+    }
+
+    /**
+     * Fetch an author from the database by searching for a specific name. This is mostly to be used internally, so
+     *      It looks for exact matches, and not partial matches. If more than one entry is found, the first one will
+     *      be the one that is returned.
+     *
+     * @param conn Shared database connection. allows the caller to better handle situations where an operation needs to be rolled-back
+     * @param name The name of the author to look for.
+     * @throws SQLException on SQL error
+     * @throws EntryNotFoundException if the query returns no results
+     */
+    public Author lookupByName(Connection conn, String name) throws SQLException, EntryNotFoundException {
+        Author author = new Author();
+
+        String query = "SELECT id, name FROM authors WHERE name = ?";
+
+        logger.info("AuthorRepository.lookupByName: Looking for the author named '{}'", name);
+
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            // Fill in the name
+            stmt.setString(1, name);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    throw new EntryNotFoundException(
+                            "Could not find an author named " + name
+                    );
+                }
+
+                author.setId(rs.getInt("id"));
+                author.setName(rs.getString("name"));
+            }
+        }
+
+        return author;
     }
 
     /**

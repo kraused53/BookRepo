@@ -1,15 +1,14 @@
 package io.github.kraused53.repository.book_authors;
 
 import io.github.kraused53.database.Database;
+import io.github.kraused53.exceptions.FailedToMakeLinkException;
 import io.github.kraused53.models.Author;
 import io.github.kraused53.models.Book;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+
+import java.sql.*;
 import java.util.*;
 
 /**
@@ -63,6 +62,114 @@ public class BookAuthorsRepository {
 
         logger.info("BookAuthorRepository.getAllBooks: Found {} books!", books.size());
         return new ArrayList<>(books.values());
+    }
+
+    /**
+     * Create a link between a book and an author.
+     *
+     * @param book the book to link.
+     * @param author the author to link.
+     * @throws SQLException if the database operation fails.
+     * @throws FailedToMakeLinkException if the link could not be created.
+     */
+    public void makeLink(Book book, Author author)
+            throws SQLException, FailedToMakeLinkException {
+
+        String query = """
+            INSERT INTO book_authors (book_id, author_id)
+            VALUES (?, ?)
+            """;
+
+        logger.info(
+                "BookAuthorsRepository.makeLink: Linking book '{}' (ID {}) "
+                        + "to author '{}' (ID {}).",
+                book.getTitle(),
+                book.getId(),
+                author.getName(),
+                author.getId()
+        );
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, book.getId());
+            stmt.setInt(2, author.getId());
+
+            int rows = stmt.executeUpdate();
+
+            if (rows != 1) {
+                logger.error(
+                        "BookAuthorsRepository.makeLink: Expected to insert "
+                                + "one relationship, but {} rows were affected.",
+                        rows
+                );
+
+                throw new FailedToMakeLinkException(
+                        "Failed to establish a link between the book and author."
+                );
+            }
+
+            logger.info(
+                    "BookAuthorsRepository.makeLink: Successfully linked "
+                            + "book '{}' to author '{}'.",
+                    book.getTitle(),
+                    author.getName()
+            );
+        }
+    }
+
+    /**
+     * Create a link between a book and an author.
+     *
+     * @param conn Shared database connection. allows the caller to better handle situations where an operation needs to be rolled-back
+     * @param book the book to link.
+     * @param author the author to link.
+     * @throws SQLException if the database operation fails.
+     * @throws FailedToMakeLinkException if the link could not be created.
+     */
+    public void makeLink(Connection conn, Book book, Author author)
+            throws SQLException, FailedToMakeLinkException {
+
+        String query = """
+            INSERT INTO book_authors (book_id, author_id)
+            VALUES (?, ?)
+            """;
+
+        logger.info(
+                "BookAuthorsRepository.makeLink: Linking book '{}' (ID {}) "
+                        + "to author '{}' (ID {}).",
+                book.getTitle(),
+                book.getId(),
+                author.getName(),
+                author.getId()
+        );
+
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setInt(1, book.getId());
+            stmt.setInt(2, author.getId());
+
+            int rows = stmt.executeUpdate();
+
+            if (rows != 1) {
+                logger.error(
+                        "BookAuthorsRepository.makeLink: Expected to insert "
+                                + "one relationship, but {} rows were affected.",
+                        rows
+                );
+
+                throw new FailedToMakeLinkException(
+                        "Failed to establish a link between the book and author."
+                );
+            }
+
+            logger.info(
+                    "BookAuthorsRepository.makeLink: Successfully linked "
+                            + "book '{}' to author '{}'.",
+                    book.getTitle(),
+                    author.getName()
+            );
+        }
     }
 
     private Book mapBook(ResultSet rs) throws SQLException {
