@@ -5,17 +5,39 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * This class makes a connection to the database listed in the database.properties file
+ * This class creates connections to configured databases.
  */
 public class Database {
+
     /**
-     * Return a connection to the database. Throws SQLException on error
+     * Connect to the default database defined in database.properties.
+     *
+     * @return a connection to the default database
+     * @throws SQLException if the connection fails
      */
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(
+        return getConnection(
                 DatabaseConfig.getUrl(),
                 DatabaseConfig.getUsername(),
                 DatabaseConfig.getPassword()
         );
+    }
+
+    /**
+     * Connect to a specified database.
+     *
+     * @param url the JDBC URL of the database
+     * @param username the database username
+     * @param password the database password
+     * @return a connection to the specified database
+     * @throws SQLException if the connection fails
+     */
+    public static Connection getConnection(
+            String url,
+            String username,
+            String password
+    ) throws SQLException {
+
+        return DriverManager.getConnection(url, username, password);
     }
 }

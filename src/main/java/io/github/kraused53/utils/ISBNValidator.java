@@ -27,10 +27,10 @@ public final class ISBNValidator {
     public static String validateISBN10(String isbn)
             throws InvalidISBNException {
 
-        logger.debug("Validating ISBN-10");
+        logger.debug("ISBNValidator.validateISBN10: Validating ISBN-10");
 
         if (isbn == null) {
-            logger.warn("ISBN-10 validation failed: input is null");
+            logger.warn("ISBNValidator.validateISBN10: ISBN-10 validation failed: input is null");
             throw new InvalidISBNException("ISBN-10 cannot be null");
         }
 
@@ -38,12 +38,12 @@ public final class ISBNValidator {
         String sanitized = isbn.replaceAll("[^0-9Xx]", "")
                 .toUpperCase();
 
-        logger.debug("Sanitized ISBN-10: {}", sanitized);
+        logger.debug("ISBNValidator.validateISBN10: Sanitized ISBN-10: {}", sanitized);
 
         // Enforce length.
         if (sanitized.length() != 10) {
             logger.warn(
-                    "ISBN-10 validation failed: expected 10 characters, got {}",
+                    "ISBNValidator.validateISBN10: ISBN-10 validation failed: expected 10 characters, got {}",
                     sanitized.length()
             );
             throw new InvalidISBNException(
@@ -54,7 +54,7 @@ public final class ISBNValidator {
         // X is permitted only as the final check digit.
         if (!sanitized.matches("[0-9]{9}[0-9X]")) {
             logger.warn(
-                    "ISBN-10 validation failed: invalid characters or X position"
+                    "ISBNValidator.validateISBN10: ISBN-10 validation failed: invalid characters or X position"
             );
             throw new InvalidISBNException(
                     "ISBN-10 must contain 9 digits followed by a digit or X"
@@ -77,7 +77,7 @@ public final class ISBNValidator {
         }
 
         if (checksum % 11 != 0) {
-            logger.warn("ISBN-10 validation failed: checksum mismatch");
+            logger.warn("ISBNValidator.validateISBN10: ISBN-10 validation failed: checksum mismatch");
             throw new InvalidISBNException(
                     "ISBN-10 checksum is invalid"
             );
@@ -97,22 +97,22 @@ public final class ISBNValidator {
     public static String validateISBN13(String isbn)
             throws InvalidISBNException {
 
-        logger.debug("Validating ISBN-13");
+        logger.debug("ISBNValidator.validateISBN13: Validating ISBN-13");
 
         if (isbn == null) {
-            logger.warn("ISBN-13 validation failed: input is null");
+            logger.warn("ISBNValidator.validateISBN13: ISBN-13 validation failed: input is null");
             throw new InvalidISBNException("ISBN-13 cannot be null");
         }
 
         // Remove whitespace, hyphens, and other non-numeric characters.
         String sanitized = isbn.replaceAll("[^0-9]", "");
 
-        logger.debug("Sanitized ISBN-13: {}", sanitized);
+        logger.debug("ISBNValidator.validateISBN13: Sanitized ISBN-13: {}", sanitized);
 
         // Enforce length.
         if (sanitized.length() != 13) {
             logger.warn(
-                    "ISBN-13 validation failed: expected 13 digits, got {}",
+                    "ISBNValidator.validateISBN13: ISBN-13 validation failed: expected 13 digits, got {}",
                     sanitized.length()
             );
             throw new InvalidISBNException(
@@ -130,13 +130,13 @@ public final class ISBNValidator {
         }
 
         if (checksum % 10 != 0) {
-            logger.warn("ISBN-13 validation failed: checksum mismatch");
+            logger.warn("ISBNValidator.validateISBN13: ISBN-13 validation failed: checksum mismatch");
             throw new InvalidISBNException(
                     "ISBN-13 checksum is invalid"
             );
         }
 
-        logger.debug("ISBN-13 validation successful");
+        logger.debug("ISBNValidator.validateISBN13: ISBN-13 validation successful");
         return sanitized;
     }
 }

@@ -396,7 +396,7 @@ public class BookRepository {
 
         String sql = """
         SELECT 1
-        FROM jbook.books
+        FROM books
         WHERE (? IS NOT NULL AND isbn_13 = ?)
            OR (? IS NOT NULL AND isbn_10 = ?)
         LIMIT 1
@@ -444,7 +444,7 @@ public class BookRepository {
 
         String sql = """
         SELECT 1
-        FROM jbook.books
+        FROM books
         WHERE (? IS NOT NULL AND isbn_13 = ?)
            OR (? IS NOT NULL AND isbn_10 = ?)
         LIMIT 1
