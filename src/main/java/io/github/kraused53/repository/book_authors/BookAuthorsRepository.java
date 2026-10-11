@@ -33,7 +33,7 @@ public class BookAuthorsRepository {
     public List<Book> getAllBooks() throws SQLException {
         Map<Integer, Book> books = new LinkedHashMap<>();
 
-        String query = "SELECT b.id AS book_id, b.title AS title, b.isbn_13 AS isbn_13, b.isbn_10 AS isbn_10, b.page_count AS page_count, b.description AS description, a.id AS author_id, a.name AS name FROM jbook.books b INNER JOIN jbook.book_authors ba ON ba.book_id = b.id INNER JOIN jbook.authors a ON a.id = ba.author_id ORDER BY b.id";
+        String query = "SELECT b.id AS book_id, b.title AS title, b.isbn_13 AS isbn_13, b.isbn_10 AS isbn_10, b.page_count AS page_count, b.description AS description, a.id AS author_id, a.name AS name FROM books b INNER JOIN book_authors ba ON ba.book_id = b.id INNER JOIN authors a ON a.id = ba.author_id ORDER BY b.id";
 
         logger.info("BookAuthorRepository.getAllBooks: Fetching all books.");
 
