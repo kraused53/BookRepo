@@ -328,11 +328,12 @@ public class TestBookRepository {
         int id = insertTestBook(original);
 
         Book updated = createBook();
+        updated.setId(id);
         updated.setTitle("Updated Repository Test Book");
         updated.setPageCount(500);
         updated.setDescription("Updated description.");
 
-        repository.update(id, updated);
+        repository.update(updated);
 
         Book saved = repository.findById(id);
 
@@ -347,41 +348,33 @@ public class TestBookRepository {
     void testUpdateUnchangedBookDoesNotThrow() throws Exception {
         Book book = createBook();
         int id = insertTestBook(book);
+        book.setId(id);
 
-        assertDoesNotThrow(() -> repository.update(id, book));
+        assertDoesNotThrow(() -> repository.update(book));
 
         Book saved = repository.findById(id);
         assertEquals(book.getTitle(), saved.getTitle());
     }
 
     @Test
-    void testUpdateMissingBookThrowsException() {
-        Book book = createBook();
-
-        assertThrows(
-                EntryNotFoundException.class,
-                () -> repository.update(-1, book)
-        );
-    }
-
-    @Test
     void testUpdateWithDuplicateISBNThrowsException() throws Exception {
         Book first = createBook();
-        insertTestBook(first);
+        int firstId = insertTestBook(first);
 
         Book second = createBook();
         int secondId = insertTestBook(second);
 
         Book conflictingUpdate = copyBook(second);
         conflictingUpdate.setIsbn13(first.getIsbn13());
+        conflictingUpdate.setId(secondId);
 
         assertThrows(
                 DuplicateEntryException.class,
-                () -> repository.update(secondId, conflictingUpdate)
+                () -> repository.update(conflictingUpdate)
         );
 
         // The failed update must not overwrite the existing ISBN.
-        Book unchanged = repository.findById(secondId);
+        Book unchanged = repository.findById(conflictingUpdate.getId());
         assertEquals(second.getIsbn13(), unchanged.getIsbn13());
     }
 

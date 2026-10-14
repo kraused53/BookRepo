@@ -249,13 +249,12 @@ public class BookRepository {
     /**
      * Update an existing book.
      *
-     * @param bookId the ID of the book to update.
      * @param book the updated book data.
      * @throws SQLException if the database operation fails.
      * @throws DuplicateEntryException if a unique constraint is violated.
      * @throws EntryNotFoundException if the book does not exist.
      */
-    public void update(int bookId, Book book)
+    public void update(Book book)
             throws SQLException, DuplicateEntryException,
             EntryNotFoundException {
 
@@ -269,7 +268,7 @@ public class BookRepository {
                 WHERE id = ?
                 """;
 
-        logger.info("BookRepository.update: Updating the book with id: {}", bookId);
+        logger.info("BookRepository.update: Updating the book with id: {}", book.getId());
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -279,17 +278,17 @@ public class BookRepository {
             stmt.setString(3, book.getIsbn13());
             stmt.setInt(4, book.getPageCount());
             stmt.setString(5, book.getDescription());
-            stmt.setInt(6, bookId);
+            stmt.setInt(6, book.getId());
 
             int rows = stmt.executeUpdate();
 
             if (rows == 0) {
                 // MySQL may report zero when the record exists but no
                 // values changed, so verify whether the ID exists.
-                if (!existsById(conn, bookId)) {
+                if (!existsById(conn, book.getId())) {
                     logger.warn("BookRepository.update: This book was not found.");
                     throw new EntryNotFoundException(
-                            "No book was found with id: " + bookId
+                            "No book was found with id: " + book.getId()
                     );
                 }
 

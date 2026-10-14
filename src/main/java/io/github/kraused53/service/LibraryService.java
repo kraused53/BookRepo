@@ -39,6 +39,11 @@ public class LibraryService {
     }
 
     /* These functions simply link to functions inside the nnnService classes */
+
+    public void updateBookInfo(Book book) throws SQLException, EntryNotFoundException, DuplicateEntryException {
+        bookRepository.update(book);
+    }
+
     /**
      * This function returns a list of all the authors inside the database.
      *
