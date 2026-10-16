@@ -47,17 +47,41 @@ public class TestBookRepository {
      */
     @AfterEach
     void tearDown() throws Exception {
-        try (Connection conn = Database.getConnection(
-                    url,
-                    username,
-                    password
-            );
-             PreparedStatement stmt =
-                     conn.prepareStatement("DELETE FROM books WHERE id = ?")) {
+        try (Connection conn = Database.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Remove any relationships first, including rows left behind
+                // by a test that failed before its generated ID was tracked.
+                try (PreparedStatement stmt = conn.prepareStatement("""
+                        DELETE ba FROM book_authors ba
+                        JOIN books b ON b.id = ba.book_id
+                        WHERE b.title LIKE 'Repository Test Book%'
+                           OR b.title = 'Updated Repository Test Book'
+                        """)) {
+                    stmt.executeUpdate();
+                }
 
-            for (int id : createdBookIds) {
-                stmt.setInt(1, id);
-                stmt.executeUpdate();
+                // Sweep the dedicated test title prefix even if a test failed
+                // before its generated ID could be added to createdBookIds.
+                try (PreparedStatement stmt = conn.prepareStatement("""
+                        DELETE FROM books
+                        WHERE title LIKE 'Repository Test Book%'
+                           OR title = 'Updated Repository Test Book'
+                        """)) {
+                    stmt.executeUpdate();
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "DELETE FROM books WHERE id = ?")) {
+                    for (int id : createdBookIds) {
+                        stmt.setInt(1, id);
+                        stmt.executeUpdate();
+                    }
+                }
+                conn.commit();
+            } catch (Exception e) {
+                conn.rollback();
+                throw e;
             }
         }
     }

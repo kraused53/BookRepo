@@ -80,6 +80,21 @@ public class LibraryService {
     }
 
     /**
+     *
+     * @param bookId The id of the book to search for
+     * @return A list of authors associated with this book
+     * @throws SQLException If there are any issues accessing the database
+     */
+    public List<Author> getAuthorsForBook(int bookId) throws SQLException {
+        if (bookId <= 0) {
+            throw new IllegalArgumentException("Book ID must be positive.");
+        }
+
+
+        return bookAuthorsRepository.getAuthorsForBookId(bookId);
+    }
+
+    /**
      * Insert a new author into the database
      *
      * @param author The author to delete

@@ -75,23 +75,33 @@ class BookAuthorsRepositoryTest {
             conn.setAutoCommit(false);
 
             try {
-                // Delete relationships before deleting their parent records.
-                try (PreparedStatement stmt = conn.prepareStatement(
-                        "DELETE FROM book_authors WHERE book_id = ?")) {
+                // Clean by both generated IDs and the dedicated test title/name
+                // prefixes so setup failures cannot leave test fixtures behind.
+                try (PreparedStatement stmt = conn.prepareStatement("""
+                        DELETE ba FROM book_authors ba
+                        JOIN books b ON b.id = ba.book_id
+                        WHERE b.title = 'Repository Test Book'
+                           OR b.id = ?
+                        """)) {
                     stmt.setInt(1, bookId);
                     stmt.executeUpdate();
                 }
 
-                try (PreparedStatement stmt = conn.prepareStatement(
-                        "DELETE FROM authors WHERE id IN (?, ?)")) {
+                try (PreparedStatement stmt = conn.prepareStatement("""
+                        DELETE FROM books
+                        WHERE id = ? OR title = 'Repository Test Book'
+                        """)) {
+                    stmt.setInt(1, bookId);
+                    stmt.executeUpdate();
+                }
+
+                try (PreparedStatement stmt = conn.prepareStatement("""
+                        DELETE FROM authors
+                        WHERE id IN (?, ?)
+                           OR name IN ('Repository Test Author', 'Repository Test Author Two')
+                        """)) {
                     stmt.setInt(1, authorId);
                     stmt.setInt(2, secondAuthorId);
-                    stmt.executeUpdate();
-                }
-
-                try (PreparedStatement stmt = conn.prepareStatement(
-                        "DELETE FROM books WHERE id = ?")) {
-                    stmt.setInt(1, bookId);
                     stmt.executeUpdate();
                 }
 

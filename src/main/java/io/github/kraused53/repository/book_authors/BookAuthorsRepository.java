@@ -65,6 +65,46 @@ public class BookAuthorsRepository {
     }
 
     /**
+     *
+     * @param bookId The book too look for
+     * @return A list of authors associated with the given book
+     * @throws SQLException If there is an error accessing the database.
+     */
+    public List<Author> getAuthorsForBookId(int bookId) throws SQLException {
+        List<Author> authors = new ArrayList<>();
+
+        String query = "SELECT a.id, a.name FROM book_authors ba INNER JOIN authors a ON a.id = ba.author_id WHERE ba.book_id = ?";
+
+        logger.info(
+                "BookAuthorsRepository.getAuthorsForBookId: Fetching all authors for book with ID {}.",
+                bookId
+        );
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            // Fill in book ID
+            stmt.setInt(1, bookId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while(rs.next()) {
+                    Author newAuthor = new Author();
+                    newAuthor.setId(rs.getInt("id"));
+                    newAuthor.setName(rs.getString("name"));
+
+                    authors.add(newAuthor);
+                }
+            }
+        }
+
+        return authors;
+    }
+
+    public void removeLink(int bookId, int authorId) {
+
+    }
+
+    /**
      * Create a link between a book and an author.
      *
      * @param book the book to link.
