@@ -37,8 +37,8 @@ This is what I plan to implement (and unit test) before setting up the api syste
 - [X] Author Model
 - [X] Basic Database Connection
 - [ ] Book Repository
-  - [ ] Fetch All Books (no author information)
-  - [ ] Fetch Book By ID (no author information)
+  - [X] Fetch All Books (no author information)
+  - [X] Fetch Book By ID (no author information)
   - [ ] Fetch Book By ISBN (auto detect isbn 10 or isbn 13)
   - [ ] Insert New Book (return new book ID)
   - [ ] Delete Book By ID

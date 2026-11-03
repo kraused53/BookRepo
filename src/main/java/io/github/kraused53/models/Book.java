@@ -57,6 +57,38 @@ public class Book {
         // Set id to -1 because this is an invalid database ID. This will act as a flag that this book is client created, and not from the database.
         this.id = -1;
     }
+    
+    public Book(String title, String isbn10, String isbn13, int pageCount, String Description) throws InvalidISBNException {
+        this.setTitle(title);
+
+        // Don't continue if given two null ISBNs
+        if(isbn10 == null && isbn13 == null) {
+            throw new InvalidISBNException("Book constructor was given two null ISBNs!");
+        }
+        
+        // If given an ISBN 10
+        if(isbn10 != null) {
+            try {
+                this.setIsbn10(isbn10);
+            } catch (InvalidISBNException e) {
+                // Was given an ISBN 10, but it was invalid
+                throw new InvalidISBNException("Book constructor was given an invalid ISBN 10");
+            }
+        }
+
+        // If given an ISBN 13
+        if(isbn13 != null) {
+            try {
+                this.setIsbn13(isbn13);
+            } catch (InvalidISBNException e) {
+                // Was given an ISBN 13, but it was invalid
+                throw new InvalidISBNException("Book constructor was given an invalid ISBN 13");
+            }
+        }
+
+        this.setPageCount(pageCount);
+        this.setDescription(Description);
+    }
 
     /*** Getters ***/
 
