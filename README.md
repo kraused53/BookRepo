@@ -39,8 +39,8 @@ This is what I plan to implement (and unit test) before setting up the api syste
 - [ ] Book Repository
   - [X] Fetch All Books (no author information)
   - [X] Fetch Book By ID (no author information)
-  - [ ] Fetch Book By ISBN (auto detect isbn 10 or isbn 13)
-  - [ ] Insert New Book (return new book ID)
+  - [X] Fetch Book By ISBN (auto detect isbn 10 or isbn 13)
+  - [X] Insert New Book (return new book ID)
   - [ ] Delete Book By ID
   - [ ] Check If Book Exists By ID
   - [ ] Fetch List Of Books By Title Search Term (no author information)
