@@ -13,3 +13,14 @@ and will allow the user to add, edit, and delete books from the database.
 
 ---
 
+run this command to compile and run the program
+
+```bash
+mvn clean compile exec:java -Dcom.mysql.cj.disableAbandonedConnectionCleanup=true
+```
+
+run this command to compile and run the test suite
+
+```bash
+mvn clean test
+```
