@@ -20,6 +20,18 @@ public class Author {
         this.id = -1;
     }
 
+    /**
+     *  Setup an author with a name
+     *
+     * @param name The name of the author
+     */
+    public Author(String name) {
+        // Set id to -1 because this is an invalid database ID. This will act as a flag that this author is client created, and not from the database.
+        this.id = -1;
+
+        this.name = name;
+    }
+
     /*** Getters ***/
 
     /**

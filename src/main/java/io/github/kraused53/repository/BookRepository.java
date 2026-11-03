@@ -245,7 +245,7 @@ public class BookRepository {
     /*** CRUD - Update Section ***/
 
     /**
-     * Update a book's author
+     * Update a book's title
      * 
      * @param id The id of the book to update
      * @param title New book title
