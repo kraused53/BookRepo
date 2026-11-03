@@ -30,9 +30,9 @@ mvn clean test
 ## Road map
 
 This is what I plan to implement (and unit test) before setting up the api system
-- [ ] Github Workflows
-  - [ ] Run JUnit Testing On Push
-  - [ ] Create SQL System And Generate Fake database.properties File For Testing
+- [X] Github Workflows
+  - [X] Run JUnit Testing On Push
+  - [X] Create SQL System And Generate Fake database.properties File For Testing
 - [X] Book Model
 - [X] Author Model
 - [X] Basic Database Connection
@@ -41,10 +41,16 @@ This is what I plan to implement (and unit test) before setting up the api syste
   - [X] Fetch Book By ID (no author information)
   - [X] Fetch Book By ISBN (auto detect isbn 10 or isbn 13)
   - [X] Insert New Book (return new book ID)
-  - [ ] Delete Book By ID
-  - [ ] Check If Book Exists By ID
+  - [X] Delete Book By ID
+  - [X] Delete Book By ISBN
+  - [X] Check If Book Exists By ID
+  - [X] Check If Book Exists By ISBN
   - [ ] Fetch List Of Books By Title Search Term (no author information)
-  - [ ] Update A Book (no author information)
+  - [X] Update Book Title
+  - [X] Update Book ISBN10
+  - [X] Update Book ISBN13
+  - [X] Update Book Page Count
+  - [X] Update Book Description
 - [ ] Author Repository
   - [ ] Fetch All Authors
   - [ ] Fetch Author By ID
