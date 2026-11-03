@@ -30,9 +30,12 @@ mvn clean test
 ## Road map
 
 This is what I plan to implement (and unit test) before setting up the api system
-- [ ] Book Model
-- [ ] Author Model
-- [ ] Basic Database Connection
+- [ ] Github Workflows
+  - [ ] Run JUnit Testing On Push
+  - [ ] Create SQL System And Generate Fake database.properties File For Testing
+- [X] Book Model
+- [X] Author Model
+- [X] Basic Database Connection
 - [ ] Book Repository
   - [ ] Fetch All Books (no author information)
   - [ ] Fetch Book By ID (no author information)
