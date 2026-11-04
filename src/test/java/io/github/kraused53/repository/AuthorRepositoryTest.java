@@ -6,12 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.kraused53.database.Database;
 import io.github.kraused53.exceptions.DuplicateEntryException;
 import io.github.kraused53.exceptions.EntryNotFoundException;
 import io.github.kraused53.exceptions.InvalidAuthorException;
@@ -29,12 +31,16 @@ public class AuthorRepositoryTest {
     @Test
     void insertReturnsGeneratedIdAndPersistsAuthor() throws Exception {
         Author author = newAuthor();
-        int id = repository.insert(author);
+        int id = -1;
 
-        try {
+        try(
+            Connection conn = Database.getConnection();
+        ) {
+            id = repository.insert(conn, author);
+
             assertTrue(id > 0);
 
-            Author loaded = repository.fetchById(id);
+            Author loaded = repository.fetchById(conn, id);
 
             assertEquals(id, loaded.getId());
             assertEquals(author.getName(), loaded.getName());
@@ -47,28 +53,38 @@ public class AuthorRepositoryTest {
     void insertRejectsDuplicateAuthorName() throws Exception {
         TestAuthor inserted = insertTestAuthor();
 
-        try {
+        try(
+            Connection conn = Database.getConnection();
+        ) {
             Author duplicate = new Author(inserted.author().getName());
 
             assertThrows(DuplicateEntryException.class,
-                    () -> repository.insert(duplicate));
+                    () -> repository.insert(conn, duplicate));
         } finally {
             cleanup(inserted.id());
         }
     }
 
     @Test
-    void insertRejectsNullAuthor() {
-        assertThrows(InvalidAuthorException.class,
-                () -> repository.insert(null));
+    void insertRejectsNullAuthor() throws SQLException {
+        try (
+            Connection conn = Database.getConnection();
+        ) {
+            assertThrows(InvalidAuthorException.class,
+                () -> repository.insert(conn, null));
+        }
     }
 
     @Test
-    void insertRejectsInvalidAuthor() {
+    void insertRejectsInvalidAuthor() throws SQLException {
         Author author = new Author("");
-
-        assertThrows(InvalidAuthorException.class,
-                () -> repository.insert(author));
+        
+        try (
+            Connection conn = Database.getConnection();
+        ) {
+            assertThrows(InvalidAuthorException.class,
+                () -> repository.insert(conn, author));
+        }
     }
 
     // ------------------------------------------------------------
@@ -79,8 +95,10 @@ public class AuthorRepositoryTest {
     void fetchAllIncludesInsertedAuthorAndItsId() throws Exception {
         TestAuthor inserted = insertTestAuthor();
 
-        try {
-            List<Author> authors = repository.fetchAll();
+        try(
+            Connection conn = Database.getConnection();
+        ) {
+            List<Author> authors = repository.fetchAll(conn);
 
             Author found = authors.stream()
                     .filter(a -> a.getName().equals(inserted.author().getName()))
@@ -102,8 +120,10 @@ public class AuthorRepositoryTest {
     void fetchByIdReturnsMatchingAuthor() throws Exception {
         TestAuthor inserted = insertTestAuthor();
 
-        try {
-            Author result = repository.fetchById(inserted.id());
+        try(
+            Connection conn = Database.getConnection();
+        ) {
+            Author result = repository.fetchById(conn, inserted.id());
 
             assertEquals(inserted.id(), result.getId());
             assertEquals(inserted.author().getName(), result.getName());
@@ -113,18 +133,26 @@ public class AuthorRepositoryTest {
     }
 
     @Test
-    void fetchByIdThrowsWhenAuthorDoesNotExist() {
-        assertThrows(EntryNotFoundException.class,
-                () -> repository.fetchById(Integer.MAX_VALUE));
+    void fetchByIdThrowsWhenAuthorDoesNotExist() throws SQLException {
+        try (
+            Connection conn = Database.getConnection();
+        ) {
+            assertThrows(EntryNotFoundException.class,
+                () -> repository.fetchById(conn, Integer.MAX_VALUE));
+        }
     }
 
     @Test
-    void fetchByIdRejectsNonpositiveId() {
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.fetchById(0));
+    void fetchByIdRejectsNonpositiveId() throws SQLException {
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.fetchById(conn, 0));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.fetchById(-1));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.fetchById(conn, -1));
+        }
     }
 
     // ------------------------------------------------------------
@@ -135,8 +163,10 @@ public class AuthorRepositoryTest {
     void fetchByNameReturnsMatchingAuthor() throws Exception {
         TestAuthor inserted = insertTestAuthor();
 
-        try {
-            Author result = repository.fetchByName(inserted.author().getName());
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            Author result = repository.fetchByName(conn, inserted.author().getName());
 
             assertEquals(inserted.id(), result.getId());
             assertEquals(inserted.author().getName(), result.getName());
@@ -147,22 +177,30 @@ public class AuthorRepositoryTest {
 
     @Test
     void fetchByNameThrowsWhenAuthorDoesNotExist() throws Exception {
-        Author author = newAuthor();
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            Author author = newAuthor();
 
-        assertThrows(EntryNotFoundException.class,
-                () -> repository.fetchByName(author.getName()));
+            assertThrows(EntryNotFoundException.class,
+                () -> repository.fetchByName(conn, author.getName()));
+        }
     }
 
     @Test
-    void fetchByNameRejectsInvalidName() {
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.fetchByName(null));
+    void fetchByNameRejectsInvalidName() throws SQLException {
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.fetchByName(conn, null));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.fetchByName(""));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.fetchByName(conn, ""));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.fetchByName("   "));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.fetchByName(conn, "   "));
+        }
     }
 
     // ------------------------------------------------------------
@@ -174,10 +212,12 @@ public class AuthorRepositoryTest {
         TestAuthor inserted = insertTestAuthor();
         String updatedName = uniqueAuthorName();
 
-        try {
-            repository.updateName(inserted.id(), updatedName);
+        try(
+            Connection conn = Database.getConnection();
+        ) {
+            repository.updateName(conn, inserted.id(), updatedName);
 
-            Author result = repository.fetchById(inserted.id());
+            Author result = repository.fetchById(conn, inserted.id());
 
             assertEquals(updatedName, result.getName());
         } finally {
@@ -189,15 +229,18 @@ public class AuthorRepositoryTest {
     void updateNameAllowsExistingName() throws Exception {
         TestAuthor inserted = insertTestAuthor();
 
-        try {
+        try(
+            Connection conn = Database.getConnection();
+        ) {
             repository.updateName(
+                    conn, 
                     inserted.id(),
                     inserted.author().getName()
             );
 
             assertEquals(
                     inserted.author().getName(),
-                    repository.fetchById(inserted.id()).getName()
+                    repository.fetchById(conn, inserted.id()).getName()
             );
         } finally {
             cleanup(inserted.id());
@@ -205,33 +248,47 @@ public class AuthorRepositoryTest {
     }
 
     @Test
-    void updateNameThrowsForMissingAuthor() {
-        assertThrows(EntryNotFoundException.class,
+    void updateNameThrowsForMissingAuthor()  throws Exception {
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertThrows(EntryNotFoundException.class,
                 () -> repository.updateName(
+                        conn, 
                         Integer.MAX_VALUE,
                         uniqueAuthorName()
                 ));
+        }
     }
 
     @Test
-    void updateNameRejectsNonpositiveId() {
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.updateName(0, uniqueAuthorName()));
+    void updateNameRejectsNonpositiveId()  throws Exception {
+        
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.updateName(conn, 0, uniqueAuthorName()));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.updateName(-1, uniqueAuthorName()));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.updateName(conn, -1, uniqueAuthorName()));
+        }
     }
 
     @Test
-    void updateNameRejectsInvalidName() {
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.updateName(1, null));
+    void updateNameRejectsInvalidName()  throws Exception {
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.updateName(conn, 1, null));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.updateName(1, ""));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.updateName(conn, 1, ""));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.updateName(1, "   "));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.updateName(conn, 1, "   "));
+        }
     }
 
     // ------------------------------------------------------------
@@ -242,28 +299,38 @@ public class AuthorRepositoryTest {
     void deleteByIdRemovesAuthor() throws Exception {
         TestAuthor inserted = insertTestAuthor();
 
-        try {
-            repository.deleteById(inserted.id());
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            repository.deleteById(conn, inserted.id());
 
-            assertFalse(repository.existsById(inserted.id()));
+            assertFalse(repository.existsById(conn, inserted.id()));
         } finally {
             cleanup(inserted.id());
         }
     }
 
     @Test
-    void deleteByIdRejectsNonpositiveId() {
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.deleteById(0));
+    void deleteByIdRejectsNonpositiveId()  throws Exception {
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.deleteById(conn, 0));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.deleteById(-1));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.deleteById(conn, -1));
+        }
     }
 
     @Test
-    void deleteByIdThrowsForMissingAuthor() {
-        assertThrows(EntryNotFoundException.class,
-                () -> repository.deleteById(Integer.MAX_VALUE));
+    void deleteByIdThrowsForMissingAuthor()  throws Exception {
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertThrows(EntryNotFoundException.class,
+                () -> repository.deleteById(conn, Integer.MAX_VALUE));
+        }
     }
 
     // ------------------------------------------------------------
@@ -274,33 +341,43 @@ public class AuthorRepositoryTest {
     void deleteByNameRemovesAuthor() throws Exception {
         TestAuthor inserted = insertTestAuthor();
 
-        try {
-            repository.deleteByName(inserted.author().getName());
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            repository.deleteByName(conn, inserted.author().getName());
 
-            assertFalse(repository.existsById(inserted.id()));
+            assertFalse(repository.existsById(conn, inserted.id()));
         } finally {
             cleanup(inserted.id());
         }
     }
 
     @Test
-    void deleteByNameRejectsInvalidName() {
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.deleteByName(null));
+    void deleteByNameRejectsInvalidName()  throws Exception {
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.deleteByName(conn, null));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.deleteByName(""));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.deleteByName(conn, ""));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.deleteByName("   "));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.deleteByName(conn, "   "));
+        }
     }
 
     @Test
     void deleteByNameThrowsForMissingAuthor() throws Exception {
-        Author author = newAuthor();
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            Author author = newAuthor();
 
-        assertThrows(EntryNotFoundException.class,
-                () -> repository.deleteByName(author.getName()));
+            assertThrows(EntryNotFoundException.class,
+                () -> repository.deleteByName(conn, author.getName()));
+        }
     }
 
     // ------------------------------------------------------------
@@ -311,8 +388,10 @@ public class AuthorRepositoryTest {
     void existsByIdReturnsTrueForExistingAuthor() throws Exception {
         TestAuthor inserted = insertTestAuthor();
 
-        try {
-            assertTrue(repository.existsById(inserted.id()));
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertTrue(repository.existsById(conn, inserted.id()));
         } finally {
             cleanup(inserted.id());
         }
@@ -320,16 +399,21 @@ public class AuthorRepositoryTest {
 
     @Test
     void existsByIdReturnsFalseForMissingAuthor() throws SQLException {
-        assertFalse(repository.existsById(Integer.MAX_VALUE));
+        try(Connection conn = Database.getConnection()) {
+            assertFalse(repository.existsById(conn, Integer.MAX_VALUE));
+        }
     }
 
     @Test
-    void existsByIdRejectsNonpositiveId() {
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.existsById(0));
+    void existsByIdRejectsNonpositiveId()  throws Exception {
+        try(Connection conn = Database.getConnection()) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.existsById(conn, 0));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.existsById(-1));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.existsById(conn, -1));
+        }
+
     }
 
     // ------------------------------------------------------------
@@ -340,28 +424,36 @@ public class AuthorRepositoryTest {
     void existsByNameReturnsTrueForExistingAuthor() throws Exception {
         TestAuthor inserted = insertTestAuthor();
 
-        try {
-            assertTrue(repository.existsByName(inserted.author().getName()));
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertTrue(repository.existsByName(conn, inserted.author().getName()));
         } finally {
             cleanup(inserted.id());
         }
     }
 
     @Test
-    void existsByNameReturnsFalseForMissingAuthor() throws SQLException {
-        assertFalse(repository.existsByName(uniqueAuthorName()));
+    void existsByNameReturnsFalseForMissingAuthor() throws Exception {
+        try (Connection conn = Database.getConnection()) {
+            assertFalse(repository.existsByName(conn, uniqueAuthorName()));
+        }
     }
 
     @Test
-    void existsByNameRejectsInvalidName() {
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.existsByName(null));
+    void existsByNameRejectsInvalidName()  throws Exception {
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.existsByName(conn, null));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.existsByName(""));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.existsByName(conn, ""));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> repository.existsByName("   "));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.existsByName(conn, "   "));
+        }
     }
 
     // ------------------------------------------------------------
@@ -371,25 +463,31 @@ public class AuthorRepositoryTest {
     private record TestAuthor(Author author, int id) {}
 
     private TestAuthor insertTestAuthor()
-            throws SQLException, DuplicateEntryException, InvalidAuthorException {
+            throws Exception {
 
-        Author author = newAuthor();
+        try(
+            Connection conn = Database.getConnection()
+        ) {
+            Author author = newAuthor();
 
-        return new TestAuthor(author, repository.insert(author));
+            return new TestAuthor(author, repository.insert(conn, author));
+        }
     }
 
-    private Author newAuthor() {
+    private Author newAuthor()  throws Exception {
         return new Author(uniqueAuthorName());
     }
 
-    private String uniqueAuthorName() {
+    private String uniqueAuthorName()  throws Exception {
         return "Repository Test Author " + System.currentTimeMillis()
                 + "-" + AUTHOR_COUNTER.incrementAndGet();
     }
 
     private void cleanup(int id) throws SQLException, EntryNotFoundException {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
+        try(Connection conn = Database.getConnection()) {
+            if (repository.existsById(conn, id)) {
+                repository.deleteById(conn, id);
+            }
         }
     }
 }

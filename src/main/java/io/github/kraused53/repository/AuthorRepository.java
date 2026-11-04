@@ -22,14 +22,16 @@ public class AuthorRepository {
     /* CRUD - Create Section */
 
     /**
-     *
+     * Insert an author into the database
+     * 
+     * @param conn A connection to the database
      * @param author The author object to add to the database.
      * @return The id of the author after it is added to the database. {@code int}
      * @throws SQLException If there is an issue connecting to the database
      * @throws DuplicateEntryException If the author is already in the database
      * @throws InvalidAuthorException If the author is not valid
      */
-    public int insert(Author author) throws InvalidAuthorException, DuplicateEntryException, SQLException {
+    public int insert(Connection conn, Author author) throws InvalidAuthorException, DuplicateEntryException, SQLException {
         if(author == null) {
             throw new InvalidAuthorException("The given author is null!");
         }
@@ -44,8 +46,7 @@ public class AuthorRepository {
         """;
 
         try(
-                Connection conn = Database.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
+            PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)
         ) {
             stmt.setString(1, author.getName());
 
@@ -72,18 +73,18 @@ public class AuthorRepository {
     /**
      * Fetch all authors from the database.
      *
+     * @param conn A connection to the database
      * @return A list of all authors in the database. {@code List<Author>}
      * @throws SQLException if the database operation fails.
      */
-    public List<Author> fetchAll() throws SQLException {
+    public List<Author> fetchAll(Connection conn) throws SQLException {
         List<Author> authors = new ArrayList<>();
 
         String query = "SELECT id, name FROM authors";
 
         try (
-                Connection conn = Database.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query);
-                ResultSet rs = stmt.executeQuery()
+            PreparedStatement stmt = conn.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery()
         ) {
 
             while (rs.next()) {
@@ -112,12 +113,13 @@ public class AuthorRepository {
     /**
      * Fetch an author by its ID.
      *
+     * @param conn A connection to the database
      * @param authorId the ID of the requested author. {@code int}
      * @return the matching author. {@code Author}
      * @throws SQLException if the database operation fails.
      * @throws EntryNotFoundException if no author has the given ID.
      */
-    public Author fetchById(int authorId) throws SQLException, InvalidAuthorException, EntryNotFoundException {
+    public Author fetchById(Connection conn, int authorId) throws SQLException, InvalidAuthorException, EntryNotFoundException {
         if (authorId <= 0) {
             throw new IllegalArgumentException("An author ID must be greater than zero;");
         }
@@ -129,7 +131,6 @@ public class AuthorRepository {
                 """;
 
         try(
-                Connection conn = Database.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(query)
         ) {
             // Load book ID into query
@@ -158,12 +159,13 @@ public class AuthorRepository {
     /**
      * This function will take a name, validate it, then use it to fetch an author from the database.
      *
+     * @param conn A connection to the database
      * @param name The name to use in the search. {@code String}
      * @return The matching author object {@code Author}
      * @throws SQLException If there is an issue connecting to the database
      * @throws EntryNotFoundException If the author is not found
      */
-    public Author fetchByName(String name) throws SQLException, EntryNotFoundException, InvalidAuthorException {
+    public Author fetchByName(Connection conn, String name) throws SQLException, EntryNotFoundException, InvalidAuthorException {
 
         if(name == null || name.isBlank()) {
             throw new IllegalArgumentException("Author name can not be null or empty.");
@@ -172,8 +174,7 @@ public class AuthorRepository {
         String query = "SELECT id, name FROM authors WHERE (name = ?)";
 
         try(
-                Connection conn = Database.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query)
+            PreparedStatement stmt = conn.prepareStatement(query)
         ) {
             // Load ISBN into both query slots
             stmt.setString(1, name);
@@ -204,12 +205,13 @@ public class AuthorRepository {
     /**
      * Update an author's name
      *
+     * @param conn A connection to the database
      * @param id The id of the author to update
      * @param name New author name
      * @throws EntryNotFoundException If there is not an author with the given ID in the database.
      * @throws SQLException If there is an issue accessing the database.
      */
-    public void updateName(int id, String name) throws EntryNotFoundException, SQLException {
+    public void updateName(Connection conn, int id, String name) throws EntryNotFoundException, SQLException {
         if (id <= 0) {
             throw new IllegalArgumentException("Given an invalid ID");
         }
@@ -221,8 +223,7 @@ public class AuthorRepository {
         String query = "UPDATE authors SET name = ? WHERE id = ?";
 
         try (
-                Connection connection = Database.getConnection();
-                PreparedStatement stmt = connection.prepareStatement(query)
+            PreparedStatement stmt = conn.prepareStatement(query)
         ) {
             stmt.setString(1, name);
             stmt.setInt(2, id);
@@ -241,11 +242,12 @@ public class AuthorRepository {
     /**
      * Attempts to delete an author from the database by its id
      *
+     * @param conn A connection to the database
      * @param authorId The id of the author to delete
      * @throws SQLException If there is an error connecting to the database
      * @throws EntryNotFoundException If there is no book with this ISBN in the database
      */
-    public void deleteById(int authorId) throws SQLException, EntryNotFoundException {
+    public void deleteById(Connection conn, int authorId) throws SQLException, EntryNotFoundException {
         if (authorId <= 0) {
             throw new IllegalArgumentException("An author ID must be greater than zero;");
         }
@@ -253,8 +255,7 @@ public class AuthorRepository {
         String query = "DELETE FROM authors WHERE id = ?";
 
         try (
-                Connection conn = Database.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query)
+            PreparedStatement stmt = conn.prepareStatement(query)
         ) {
 
             stmt.setInt(1, authorId);
@@ -270,11 +271,12 @@ public class AuthorRepository {
     /**
      * Attempts to delete an author from the database by its name
      *
+     * @param conn A connection to the database
      * @param name The name of the author to delete
      * @throws SQLException If there is an error connecting to the database
      * @throws EntryNotFoundException If there is no book with this name in the database
      */
-    public void deleteByName(String name) throws SQLException, EntryNotFoundException {
+    public void deleteByName(Connection conn, String name) throws SQLException, EntryNotFoundException {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("An author's name can not be null or blank");
         }
@@ -282,8 +284,7 @@ public class AuthorRepository {
         String query = "DELETE FROM authors WHERE name = ?";
 
         try (
-                Connection conn = Database.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query)
+            PreparedStatement stmt = conn.prepareStatement(query)
         ) {
 
             stmt.setString(1, name);
@@ -301,11 +302,12 @@ public class AuthorRepository {
     /**
      * Checks whether an author exists in the database by its ID.
      *
+     * @param conn A connection to the database
      * @param authorId The ID of the author to check.
      * @return true if the author exists, false otherwise.
      * @throws SQLException If there is an issue accessing the database.
      */
-    public boolean existsById(int authorId) throws SQLException {
+    public boolean existsById(Connection conn, int authorId) throws SQLException {
         if (authorId <= 0) {
             throw new IllegalArgumentException(
                     "An author ID must be greater than zero."
@@ -315,8 +317,7 @@ public class AuthorRepository {
         String query = "SELECT 1 FROM authors WHERE id = ?";
 
         try (
-                Connection conn = Database.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query)
+            PreparedStatement stmt = conn.prepareStatement(query)
         ) {
             stmt.setInt(1, authorId);
 
@@ -329,11 +330,12 @@ public class AuthorRepository {
     /**
      * Checks whether an author exists in the database by its name.
      *
+     * @param conn A connection to the database
      * @param name The name of the author to check.
      * @return true if the author exists, false otherwise.
      * @throws SQLException If there is an issue accessing the database.
      */
-    public boolean existsByName(String name) throws SQLException {
+    public boolean existsByName(Connection conn, String name) throws SQLException {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException(
                     "An author name can not be blank or null."
@@ -343,8 +345,7 @@ public class AuthorRepository {
         String query = "SELECT 1 FROM authors WHERE name = ?";
 
         try (
-                Connection conn = Database.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(query)
+            PreparedStatement stmt = conn.prepareStatement(query)
         ) {
             stmt.setString(1, name);
 

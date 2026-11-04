@@ -69,8 +69,14 @@ This is what I plan to implement (and unit test) before setting up the api syste
   - [x] Delete A Relation Between A Book And An Author (With IDs)
   - [x] Check If A Book And Author Are Related (With IDs)
 - [ ] Service Layer (Expose A Set Of API Functions That Will Handle The Logistics For Each Of The Basic CRUD Operations)
-  - [ ] Fetch List Of All Books With Their Authors Filled In
+  - [X] Fetch List Of All Books With Their Authors Filled In or Not
   - [ ] Create A New Book And New Authors By Passing Book Object With Author Objects Filled In
-  - [ ] Update New Book By Passing Book Object With Author Objects Filled In
-  - [ ] Delete Book By Passing Book Object
-  - [ ] Passthroughs For The Above Read Operations
+  - [X] Update New Book By Passing Book Object With Author Objects Filled In
+  - [ ] Delete Book By Passing Book Id
+  - [X] Passthroughs For The Above Read Operations
+   - [X] Fetch book by id
+   - [X] Fetch book by isbn
+   - [X] Fetch author by id
+   - [X] Fetch author by name
+   - [X] Fetch authors for book
+   - [X] Fetch all books for author

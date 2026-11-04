@@ -29,12 +29,13 @@ public class BookAuthorsRepository {
     /**
      * Create an new book / author relation
      * 
+     * @param conn A connection to the database
      * @param bookId The id of the book
      * @param authorId The id of the author
      * @throws DuplicateEntryException If the book / author relation already exists
      * @throws SQLException If there is an error connecting to the database
      */
-    public void createNewRelation(int bookId, int authorId) throws DuplicateEntryException, SQLException {
+    public void createNewRelation(Connection conn, int bookId, int authorId) throws DuplicateEntryException, SQLException {
         // Validate Ids
         if(bookId <= 0) {
             throw new IllegalArgumentException("Given an invalid book Id.");
@@ -47,7 +48,6 @@ public class BookAuthorsRepository {
         String query = "INSERT INTO book_authors (book_id, author_id) VALUES (?, ?)";
 
         try (
-            Connection conn = Database.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query)
         ) {
             stmt.setInt(1, bookId);
@@ -68,13 +68,14 @@ public class BookAuthorsRepository {
     /**
      * Fetch the id of every book currently related to the given author id
      * 
+     * @param conn A connection to the database
      * @param authorId The id of the author
      * @return A list of the ids of all books related to the given author id
      * @throws SQLException If there is an issue connecting to the database
      * @throws InvalidBookException If the query returns an invalid book id
      * @throws InvalidAuthorException If given an invalid author id
      */
-    public List<Integer> fetchAllBooksIdsRelatedToAuthorId(int authorId) throws SQLException, InvalidBookException, InvalidAuthorException {
+    public List<Integer> fetchAllBooksIdsRelatedToAuthorId(Connection conn, int authorId) throws SQLException, InvalidBookException, InvalidAuthorException {
 
         // Validate id
         if(authorId <= 0) {
@@ -86,7 +87,6 @@ public class BookAuthorsRepository {
         String query = "SELECT book_id FROM book_authors WHERE author_id = ?";
 
         try (
-            Connection conn = Database.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query)
         ) {
             stmt.setInt(1, authorId);
@@ -110,13 +110,14 @@ public class BookAuthorsRepository {
     /**
      * Fetch the id of every author currently related to the given book id
      * 
+     * @param conn A connection to the database
      * @param bookId The id of the book
      * @return A list of the ids of all authors related to the given book id
      * @throws SQLException If there is an issue connecting to the database
      * @throws InvalidBookException If given an invalid book id
      * @throws InvalidAuthorException If the query returns an invalid author id
      */
-    public List<Integer> fetchAllAuthorIdsRelatedToBookId(int bookId) throws InvalidAuthorException, SQLException, InvalidBookException {
+    public List<Integer> fetchAllAuthorIdsRelatedToBookId(Connection conn, int bookId) throws InvalidAuthorException, SQLException, InvalidBookException {
         // Validate id
         if(bookId <= 0) {
             throw new InvalidBookException("Given invalid author ID: " + bookId);
@@ -127,7 +128,6 @@ public class BookAuthorsRepository {
         String query = "SELECT author_id FROM book_authors WHERE book_id = ?";
 
         try(
-            Connection conn = Database.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query)
         ) {
             stmt.setInt(1, bookId);
@@ -160,12 +160,13 @@ public class BookAuthorsRepository {
     /**
      * Delete a book, author relation
      * 
+     * @param conn A connection to the database
      * @param bookId The book's id
      * @param authorId The author's id
      * @throws SQLException If there is an error accessing the database
      * @throws EntryNotFoundException If no rows are deleted (indicates that relation did not exist)
      */
-    public void deleteRelation(int bookId, int authorId) throws SQLException, EntryNotFoundException {
+    public void deleteRelation(Connection conn, int bookId, int authorId) throws SQLException, EntryNotFoundException {
         // Validate Ids
         if(bookId <= 0) {
             throw new IllegalArgumentException("Given an invalid book Id: " + bookId);
@@ -178,7 +179,6 @@ public class BookAuthorsRepository {
         String query = "DELETE FROM book_authors WHERE book_id = ? AND author_id = ?";
 
         try (
-            Connection conn = Database.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query);
         ) {
 
@@ -198,12 +198,13 @@ public class BookAuthorsRepository {
     /**
      * Checks whether a book and an author are related in the database by their IDs.
      *
+     * @param conn A connection to the database
      * @param bookId The book's id
      * @param authorId The author's id
      * @return true if there is an existing relation, false otherwise
      * @throws SQLException If there is an error accessing the database
      */
-    public boolean doesRelationExist(int bookId, int authorId) throws SQLException {
+    public boolean doesRelationExist(Connection conn, int bookId, int authorId) throws SQLException {
         // Validate Ids
         if(bookId <= 0) {
             throw new IllegalArgumentException("Given an invalid book Id.");
@@ -216,7 +217,6 @@ public class BookAuthorsRepository {
         String query = "SELECT 1 FROM book_authors WHERE book_id = ? AND author_id = ?";
 
         try(
-            Connection conn = Database.getConnection();
             PreparedStatement stmt = conn.prepareStatement(query)
         ) {
             stmt.setInt(1, bookId);

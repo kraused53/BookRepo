@@ -1,105 +1,26 @@
 package io.github.kraused53;
 
-import java.sql.SQLException;
+import java.util.List;
 
-import javax.management.RuntimeErrorException;
-
-import io.github.kraused53.exceptions.DuplicateEntryException;
-import io.github.kraused53.exceptions.EntryNotFoundException;
-import io.github.kraused53.exceptions.InvalidBookException;
-import io.github.kraused53.exceptions.InvalidISBNException;
+import io.github.kraused53.models.Author;
 import io.github.kraused53.models.Book;
-import io.github.kraused53.repository.BookRepository;
+import io.github.kraused53.service_api.ServiceApi;
 
 public class BookRepo {
     public static void main(String[] args) {
 
-        BookRepository bookRepository = new BookRepository();
+        ServiceApi api = new ServiceApi();
 
-        Book book;
-        int bookId = -1;
-
-        // Make book
         try {
-            book = new Book(
-                "Example Book Title",
-                null,
-                "9780778387459",
-                5,
-                "A test book"
-            );
+            List<Book> books = api.fetchBooksForAuthor(1);
+
+            for(Book b : books) {
+                System.out.println("\n---------- Book ----------");
+                System.out.println(b);
+            }
         } catch (Exception e) {
-            throw new RuntimeException("There was an error making the book!" + e);
-        }
-
-        // Search for book before inserting
-        try {
-            System.out.println("========== Book ==========\n"+bookRepository.fetchByISBN("9780778387459")+"\n");
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException("There was an error fetching the book!" + e);
-        } catch (EntryNotFoundException | InvalidBookException | InvalidISBNException f) {
-            System.out.println(f.getMessage());
-        }
-
-        // Insert the book
-        try {
-            bookId = bookRepository.insert(book);
-        } catch (DuplicateEntryException de) {
-            System.out.println("This book is already in the database");
-        } catch (SQLException | InvalidBookException e) {
-            throw new RuntimeException("There was an error inserting the book!" + e);
-        }
-
-        // Book should now be in the database
-        try {
-            System.out.println("========== Book ==========\n"+bookRepository.fetchByISBN("9780778387459")+"\n");
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException("There was an error fetching the book!" + e);
-        } catch (EntryNotFoundException | InvalidBookException | InvalidISBNException f) {
-            System.out.println(f.getMessage());
-        }
-
-        // Try inserting a second time
-        try {
-            bookId = bookRepository.insert(book);
-        } catch (DuplicateEntryException de) {
-            System.out.println("This book is already in the database");
-        } catch (SQLException | InvalidBookException e) {
-            throw new RuntimeException("There was an error inserting the book!" + e);
-        }
-
-        // Book should still be in database
-        try {
-            System.out.println("========== Book ==========\n"+bookRepository.fetchByISBN("9780778387459")+"\n");
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException("There was an error fetching the book!" + e);
-        } catch (EntryNotFoundException | InvalidBookException | InvalidISBNException f) {
-            System.out.println(f.getMessage());
-        }
-
-        // Delete book
-        try {
-            bookRepository.deleteByIsbn(book.getIsbn13());
-        } catch (EntryNotFoundException de) {
-            System.out.println("The book with id " + bookId + " was not found in the database!");
-        } catch (SQLException e) {
-            throw new RuntimeException("There was an error inserting the book!" + e);
-        } catch (InvalidISBNException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
-
-        // Book should now not be in database
-        try {
-            System.out.println("========== Book ==========\n"+bookRepository.fetchByISBN("9780778387459")+"\n");
-        } catch (SQLException e) {
-            // TODO Auto-generated catch block
-            throw new RuntimeException("There was an error fetching the book!" + e);
-        } catch (EntryNotFoundException | InvalidBookException | InvalidISBNException f) {
-            System.out.println(f.getMessage());
         }
     }
 }

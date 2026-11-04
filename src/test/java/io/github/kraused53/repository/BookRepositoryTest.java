@@ -5,12 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.jupiter.api.Test;
 
+import io.github.kraused53.database.Database;
 import io.github.kraused53.exceptions.DuplicateEntryException;
 import io.github.kraused53.exceptions.EntryNotFoundException;
 import io.github.kraused53.exceptions.InvalidBookException;
@@ -28,11 +30,12 @@ public class BookRepositoryTest {
     @Test
     void insertReturnsGeneratedIdAndPersistsBook() throws Exception {
         Book book = newBook();
-        int id = repository.insert(book);
+        int id = -1;
 
-        try {
+        try(Connection conn = Database.getConnection()) {
+            id = repository.insert(conn, book);
             assertTrue(id > 0);
-            Book loaded = repository.fetchById(id);
+            Book loaded = repository.fetchById(conn, id);
 
             assertEquals(id, loaded.getId());
             assertEquals(book.getTitle(), loaded.getTitle());
@@ -49,7 +52,7 @@ public class BookRepositoryTest {
     void insertRejectsDuplicateISBN() throws Exception {
         TestBook inserted = insertTestBook();
 
-        try {
+        try(Connection conn = Database.getConnection()) {
             Book duplicate = new Book(
                 inserted.book().getTitle(),
                 inserted.book().getIsbn10(),
@@ -59,7 +62,7 @@ public class BookRepositoryTest {
             );
 
             assertThrows(DuplicateEntryException.class,
-                () -> repository.insert(duplicate));
+                () -> repository.insert(conn, duplicate));
         } finally {
             cleanup(inserted.id());
         }
@@ -73,8 +76,8 @@ public class BookRepositoryTest {
     void fetchAllIncludesInsertedBookAndItsId() throws Exception {
         TestBook inserted = insertTestBook();
 
-        try {
-            List<Book> books = repository.fetchAll();
+        try(Connection conn = Database.getConnection()) {
+            List<Book> books = repository.fetchAll(conn);
 
             Book found = books.stream()
                 .filter(b -> b.getIsbn13().equals(inserted.book().getIsbn13()))
@@ -96,8 +99,8 @@ public class BookRepositoryTest {
     void fetchByIdReturnsMatchingBook() throws Exception {
         TestBook inserted = insertTestBook();
 
-        try {
-            Book result = repository.fetchById(inserted.id());
+        try(Connection conn = Database.getConnection()) {
+            Book result = repository.fetchById(conn, inserted.id());
 
             assertEquals(inserted.id(), result.getId());
             assertEquals(inserted.book().getTitle(), result.getTitle());
@@ -109,17 +112,21 @@ public class BookRepositoryTest {
     }
 
     @Test
-    void fetchByIdThrowsWhenBookDoesNotExist() {
-        assertThrows(EntryNotFoundException.class,
-            () -> repository.fetchById(Integer.MAX_VALUE));
+    void fetchByIdThrowsWhenBookDoesNotExist() throws SQLException {
+        try(Connection conn = Database.getConnection()) {
+            assertThrows(EntryNotFoundException.class,
+                () -> repository.fetchById(conn, Integer.MAX_VALUE));
+        }
     }
 
     @Test
-    void fetchByIdRejectsNonpositiveId() {
-        assertThrows(IllegalArgumentException.class,
-            () -> repository.fetchById(0));
-        assertThrows(IllegalArgumentException.class,
-            () -> repository.fetchById(-1));
+    void fetchByIdRejectsNonpositiveId() throws SQLException {
+        try(Connection conn = Database.getConnection()) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.fetchById(conn, 0));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.fetchById(conn, -1));
+        }
     }
 
     // ------------------------------------------------------------
@@ -130,27 +137,31 @@ public class BookRepositoryTest {
     void deleteByIdRemovesBook() throws Exception {
         TestBook inserted = insertTestBook();
 
-        try {
-            repository.deleteById(inserted.id());
+        try(Connection conn = Database.getConnection()) {
+            repository.deleteById(conn, inserted.id());
 
-            assertFalse(repository.existsById(inserted.id()));
+            assertFalse(repository.existsById(conn, inserted.id()));
         } finally {
             cleanup(inserted.id());
         }
     }
 
     @Test
-    void deleteByIdRejectsNonpositiveId() {
-        assertThrows(IllegalArgumentException.class,
-            () -> repository.deleteById(0));
-        assertThrows(IllegalArgumentException.class,
-            () -> repository.deleteById(-1));
+    void deleteByIdRejectsNonpositiveId() throws SQLException {
+        try(Connection conn = Database.getConnection()) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.deleteById(conn, 0));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.deleteById(conn, -1));
+        }
     }
 
     @Test
-    void deleteByIdThrowsForMissingBook() {
-        assertThrows(EntryNotFoundException.class,
-            () -> repository.deleteById(Integer.MAX_VALUE));
+    void deleteByIdThrowsForMissingBook() throws SQLException {
+        try(Connection conn = Database.getConnection()) {
+            assertThrows(EntryNotFoundException.class,
+                () -> repository.deleteById(conn, Integer.MAX_VALUE));
+        }
     }
 
     // ------------------------------------------------------------
@@ -161,10 +172,10 @@ public class BookRepositoryTest {
     void deleteByIsbnRemovesBookUsingISBN10() throws Exception {
         TestBook inserted = insertTestBook();
 
-        try {
-            repository.deleteByIsbn(inserted.book().getIsbn10());
+        try(Connection conn = Database.getConnection()) {
+            repository.deleteByIsbn(conn, inserted.book().getIsbn10());
 
-            assertFalse(repository.existsById(inserted.id()));
+            assertFalse(repository.existsById(conn, inserted.id()));
         } finally {
             cleanup(inserted.id());
         }
@@ -174,27 +185,31 @@ public class BookRepositoryTest {
     void deleteByIsbnRemovesBookUsingISBN13() throws Exception {
         TestBook inserted = insertTestBook();
 
-        try {
-            repository.deleteByIsbn(inserted.book().getIsbn13());
+        try(Connection conn = Database.getConnection()) {
+            repository.deleteByIsbn(conn, inserted.book().getIsbn13());
 
-            assertFalse(repository.existsById(inserted.id()));
+            assertFalse(repository.existsById(conn, inserted.id()));
         } finally {
             cleanup(inserted.id());
         }
     }
 
     @Test
-    void deleteByIsbnRejectsInvalidISBN() {
-        assertThrows(InvalidISBNException.class,
-            () -> repository.deleteByIsbn("invalid"));
+    void deleteByIsbnRejectsInvalidISBN() throws SQLException {
+        try(Connection conn = Database.getConnection()) {
+            assertThrows(InvalidISBNException.class,
+                () -> repository.deleteByIsbn(conn, "invalid"));
+        }
     }
 
     @Test
     void deleteByIsbnThrowsWhenBookDoesNotExist() throws Exception {
-        Book book = newBook();
+        try(Connection conn = Database.getConnection()) {
+            Book book = newBook();
 
-        assertThrows(EntryNotFoundException.class,
-            () -> repository.deleteByIsbn(book.getIsbn13()));
+            assertThrows(EntryNotFoundException.class,
+                () -> repository.deleteByIsbn(conn, book.getIsbn13()));
+        }
     }
 
     // ------------------------------------------------------------
@@ -205,8 +220,8 @@ public class BookRepositoryTest {
     void existsByIdReturnsTrueForExistingBook() throws Exception {
         TestBook inserted = insertTestBook();
 
-        try {
-            assertTrue(repository.existsById(inserted.id()));
+        try(Connection conn = Database.getConnection()) {
+            assertTrue(repository.existsById(conn, inserted.id()));
         } finally {
             cleanup(inserted.id());
         }
@@ -214,15 +229,19 @@ public class BookRepositoryTest {
 
     @Test
     void existsByIdReturnsFalseForMissingBook() throws SQLException {
-        assertFalse(repository.existsById(Integer.MAX_VALUE));
+        try(Connection conn = Database.getConnection()) {
+            assertFalse(repository.existsById(conn, Integer.MAX_VALUE));
+        }
     }
 
     @Test
-    void existsByIdRejectsNonpositiveId() {
-        assertThrows(IllegalArgumentException.class,
-            () -> repository.existsById(0));
-        assertThrows(IllegalArgumentException.class,
-            () -> repository.existsById(-1));
+    void existsByIdRejectsNonpositiveId() throws SQLException {
+        try(Connection conn = Database.getConnection()) {
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.existsById(conn, 0));
+            assertThrows(IllegalArgumentException.class,
+                () -> repository.existsById(conn, -1));
+        }
     }
 
     // ------------------------------------------------------------
@@ -233,9 +252,9 @@ public class BookRepositoryTest {
     void existsByISBNReturnsTrueForISBN10AndISBN13() throws Exception {
         TestBook inserted = insertTestBook();
 
-        try {
-            assertTrue(repository.existsByISBN(inserted.book().getIsbn10()));
-            assertTrue(repository.existsByISBN(inserted.book().getIsbn13()));
+        try(Connection conn = Database.getConnection()) {
+            assertTrue(repository.existsByISBN(conn, inserted.book().getIsbn10()));
+            assertTrue(repository.existsByISBN(conn, inserted.book().getIsbn13()));
         } finally {
             cleanup(inserted.id());
         }
@@ -243,16 +262,20 @@ public class BookRepositoryTest {
 
     @Test
     void existsByISBNReturnsFalseForValidISBNNotInDatabase() throws Exception {
-        Book book = newBook();
+        try(Connection conn = Database.getConnection()) {
+            Book book = newBook();
 
-        assertFalse(repository.existsByISBN(book.getIsbn10()));
-        assertFalse(repository.existsByISBN(book.getIsbn13()));
+            assertFalse(repository.existsByISBN(conn, book.getIsbn10()));
+            assertFalse(repository.existsByISBN(conn, book.getIsbn13()));
+        }
     }
 
     @Test
-    void existsByISBNRejectsInvalidISBN() {
-        assertThrows(InvalidISBNException.class,
-            () -> repository.existsByISBN("invalid"));
+    void existsByISBNRejectsInvalidISBN() throws SQLException {
+        try(Connection conn = Database.getConnection()) {
+            assertThrows(InvalidISBNException.class,
+                () -> repository.existsByISBN(conn, "invalid"));
+        }
     }
 
     /*** Utility ***/
@@ -262,8 +285,10 @@ public class BookRepositoryTest {
     private TestBook insertTestBook()
             throws SQLException, DuplicateEntryException, InvalidBookException,
                    InvalidISBNException {
-        Book book = newBook();
-        return new TestBook(book, repository.insert(book));
+        try(Connection conn = Database.getConnection()) {
+            Book book = newBook();
+            return new TestBook(book, repository.insert(conn, book));
+        }
     }
 
     private Book newBook() throws InvalidISBNException {
@@ -310,8 +335,10 @@ public class BookRepositoryTest {
     }
 
     private void cleanup(int id) throws SQLException, EntryNotFoundException {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
+        try(Connection conn = Database.getConnection()) {
+            if (repository.existsById(conn, id)) {
+                repository.deleteById(conn, id);
+            }
         }
     }
 }
