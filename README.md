@@ -2,7 +2,7 @@
 
 ---
 
-I am rebuilding this to make testing better / easier. I will be working on branch: REBUILD until work is complete. Then I will move back to MAIN before implemementing an api endpoint
+I am now working on implementing the web api system so that I can access this system from a web page
 
 ---
 
@@ -28,6 +28,8 @@ mvn clean test
 ---
 
 ## Road map
+
+### Server Side
 
 This is what I plan to implement (and unit test) before setting up the api system
 - [X] Github Workflows
@@ -68,15 +70,29 @@ This is what I plan to implement (and unit test) before setting up the api syste
   - [x] Make A Relation Between A Book And An Author (With IDs)
   - [x] Delete A Relation Between A Book And An Author (With IDs)
   - [x] Check If A Book And Author Are Related (With IDs)
-- [ ] Service Layer (Expose A Set Of API Functions That Will Handle The Logistics For Each Of The Basic CRUD Operations)
+- [X] Service Layer (Expose A Set Of API Functions That Will Handle The Logistics For Each Of The Basic CRUD Operations)
   - [X] Fetch List Of All Books With Their Authors Filled In or Not
-  - [ ] Create A New Book And New Authors By Passing Book Object With Author Objects Filled In
-  - [X] Update New Book By Passing Book Object With Author Objects Filled In
+  - [X] Create A New Book And New Authors By Passing Book Object With Author Objects Filled In
+  - [X] Update A Book By Passing Book Object With Author Objects Filled In
   - [X] Delete Book By Passing Book Id
   - [X] Passthroughs For The Above Read Operations
-   - [X] Fetch book by id
-   - [X] Fetch book by isbn
-   - [X] Fetch author by id
-   - [X] Fetch author by name
-   - [X] Fetch authors for book
-   - [X] Fetch all books for author
+    - [X] Fetch book by id
+    - [X] Fetch book by isbn
+    - [X] Fetch author by id
+    - [X] Fetch author by name
+    - [X] Fetch authors for book
+    - [X] Fetch all books for author
+
+### Client Side
+
+- [ ] Starting point
+  - [ ] Homepage with menu / display
+  - [ ] GET endpoints
+    - [ ] /books endpoint: return all books with authors
+    - [ ] /authors endpoint: return all authors
+  - [ ] POST endpoints
+    - [ ] Add new book
+    - [ ] Update existing book
+    - [ ] Add new author
+    - [ ] Update existing author
+
