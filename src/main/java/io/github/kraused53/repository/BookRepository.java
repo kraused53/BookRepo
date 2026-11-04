@@ -27,7 +27,7 @@ public class BookRepository {
      */
     public BookRepository() {}
 
-    /*** CRUD - Create Section ***/
+    /* CRUD - Create Section */
 
     /**
      * 
@@ -82,7 +82,7 @@ public class BookRepository {
         }
     }
 
-    /*** CRUD - Read Section ***/
+    /* CRUD - Read Section */
 
     /**
      * Fetch all books from the database.
@@ -242,7 +242,7 @@ public class BookRepository {
     }
 
 
-    /*** CRUD - Update Section ***/
+    /* CRUD - Update Section */
 
     /**
      * Update a book's title
@@ -412,7 +412,7 @@ public class BookRepository {
     }
 
 
-    /*** CRUD - Destroy Section ***/
+    /* CRUD - Destroy Section */
 
     /**
      * Attempts to delete a book from the database by it's id
@@ -483,7 +483,7 @@ public class BookRepository {
         }
     }
 
-    /*** Utility ***/
+    /* Utility */
 
     /**
      * Checks whether a book exists in the database by its ID.

@@ -52,22 +52,25 @@ This is what I plan to implement (and unit test) before setting up the api syste
   - [X] Update Book Page Count
   - [X] Update Book Description
 - [ ] Author Repository
-  - [ ] Fetch All Authors
-  - [ ] Fetch Author By ID
-  - [ ] Insert New Author (return new author ID)
-  - [ ] Delete Author By ID
-  - [ ] Check If Author Exists By ID
-  - [ ] Check If Author Exists By Name
+  - [X] Fetch All Authors
+  - [X] Fetch Author By ID
+  - [X] Fetch Author By Exact Name
+  - [X] Insert New Author (return new author ID)
+  - [X] Delete Author By ID
+  - [X] Delete Author By Exact Name
+  - [X] Check If Author Exists By ID
+  - [X] Check If Author Exists By Name
   - [ ] Fetch List Of Authors By Name Search Term
-  - [ ] Update An Author
-- [ ] Book-Authors Repository
-  - [ ] Fetch List Of All Books With Their Authors Filled In
-  - [ ] Fetch All Books Associated With Specific Author ID
-  - [ ] Fetch All Authors Associated With Specific Book ID
-  - [ ] Make A Relation Between A Book And An Author (With IDs)
-  - [ ] Delete A Relation Between A Book And An Author (With IDs)
-  - [ ] Check If A Book And Author Are Related (With IDs)
+  - [X] Update An Author's Name
+- [X] Book-Authors Repository
+  - [x] Fetch All Books Associated With Specific Author ID
+  - [x] Fetch All Authors Associated With Specific Book ID
+  - [x] Make A Relation Between A Book And An Author (With IDs)
+  - [x] Delete A Relation Between A Book And An Author (With IDs)
+  - [x] Check If A Book And Author Are Related (With IDs)
 - [ ] Service Layer (Expose A Set Of API Functions That Will Handle The Logistics For Each Of The Basic CRUD Operations)
-  - [ ] Create A New Book By Passing Book Object With Author Objects Filled In
+  - [ ] Fetch List Of All Books With Their Authors Filled In
+  - [ ] Create A New Book And New Authors By Passing Book Object With Author Objects Filled In
   - [ ] Update New Book By Passing Book Object With Author Objects Filled In
   - [ ] Delete Book By Passing Book Object
+  - [ ] Passthroughs For The Above Read Operations
