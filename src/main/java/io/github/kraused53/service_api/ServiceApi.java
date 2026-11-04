@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -226,122 +227,282 @@ public class ServiceApi {
      * This function takes a book object and updates the database based on its new features.
      * Steps:
      *      1] Make sure the book was originally fetched from the database.
-     *      2] Fetch the authors currently associated with this book
-     *      3] Fetch the authors associated with the updated book
-     *      4] Create a list of authors now associated with the updated book
-     *      5] Create a list of authors no longer associated with the updated book
-     *      6] Update each feature of the book in the database
-     *      7] Create a link for each author in step 4
-     *      8] Delete the links for each author in step 5
-     * 
+     *      2] Fetch the authors currently associated with this book.
+     *      3] Fetch the authors associated with the updated book.
+     *      4] Create a list of authors now associated with the updated book.
+     *      5] Create a list of authors no longer associated with the updated book.
+     *      6] Update each feature of the book in the database.
+     *      7] Create a link for each author in step 4.
+     *      8] Delete the links for each author in step 5.
+     *
      * @param updatedBook The book with updated features
      * @throws ClientMadeBookException The given book was made by the client, not taken from the database
      * @throws InvalidAuthorException Encountered an invalid author
      * @throws SQLException If there is an error connecting to the database
      * @throws InvalidBookException The given book is not valid
-     * @throws EntryNotFoundException Either the book or it's authors are no longer in the database
+     * @throws EntryNotFoundException Either the book or its authors are no longer in the database
      * @throws InvalidISBNException Encountered an invalid ISBN
      * @throws DuplicateEntryException There was an error finding authors for the book. The function attempted to add an author twice
      */
-    public void updateBook(Book updatedBook) throws ClientMadeBookException, InvalidAuthorException, SQLException, InvalidBookException, EntryNotFoundException, InvalidISBNException, DuplicateEntryException {
-        try(Connection conn = Database.getConnection()) {
-            // Can only UPDATE a book if it is not an entirely new book
-            if(updatedBook.getId() < 1 || !bookRepository.existsById(conn, updatedBook.getId())) {
-                throw new ClientMadeBookException("This book is not from the database");
-            }
+    public void updateBook(Book updatedBook)
+            throws ClientMadeBookException,
+                InvalidAuthorException,
+                SQLException,
+                InvalidBookException,
+                EntryNotFoundException,
+                InvalidISBNException,
+                DuplicateEntryException {
 
-            // Current version of the book
-            Book currentBook = fetchBookById(updatedBook.getId());
+        // Validate the provided book
+        if (updatedBook == null) {
+            throw new InvalidBookException("The given book is null!");
+        }
 
-            // Get all authors currently associated with this book
-            Set<Integer> currentAuthors = new HashSet<>(
-                bookAuthorsRepository.fetchAllAuthorIdsRelatedToBookId(conn, updatedBook.getId())
-            );
+        try (Connection conn = Database.getConnection()) {
 
-            // Get all authors in updated book
-            Set<Integer> updatedAuthors = updatedBook.getAuthors()
-                .stream()
-                .map(Author::getId)
-                .collect(Collectors.toSet());
+            // Pause updating the database until all actions resolve
+            conn.setAutoCommit(false);
 
-            // Authors in Book Object not in current list
-            Set<Integer> linksToCreate = new HashSet<>(updatedAuthors);
-            linksToCreate.removeAll(currentAuthors);
+            try {
+                int bookId = updatedBook.getId();
 
-            // Authors in current list that are not in Book Object
-            Set<Integer> linksToDelete = new HashSet<>(currentAuthors);
-            linksToDelete.removeAll(updatedAuthors);
+                // Can only UPDATE a book that already exists in the database
+                if (bookId < 1 || !bookRepository.existsById(conn, bookId)) {
+                    throw new ClientMadeBookException(
+                        "This book is not from the database"
+                    );
+                }
 
-            // Update the book title
-            if(!updatedBook.getTitle().equals(currentBook.getTitle())) {
-                bookRepository.updateTitle(
-                    conn, 
-                    updatedBook.getId(),
-                    updatedBook.getTitle()
+                // Fetch current version using the transaction's connection
+                Book currentBook = bookRepository.fetchById(conn, bookId);
+
+                // Get all authors currently associated with this book
+                Set<Integer> currentAuthors = new HashSet<>(
+                    bookAuthorsRepository.fetchAllAuthorIdsRelatedToBookId(
+                        conn,
+                        bookId
+                    )
                 );
-            }
 
-            // Update the book ISBN10
-            if(!updatedBook.getIsbn10().equals(currentBook.getIsbn10())) {
-                bookRepository.updateIsbn10(
-                    conn, 
-                    updatedBook.getId(),
-                    updatedBook.getIsbn10()
-                );
-            }
+                // Get all authors associated with the updated book
+                Set<Integer> updatedAuthors = updatedBook.getAuthors()
+                    .stream()
+                    .map(Author::getId)
+                    .collect(Collectors.toSet());
 
-            // Update the book ISBN13
-            if(!updatedBook.getIsbn13().equals(currentBook.getIsbn13())) {
-                bookRepository.updateIsbn13(
-                    conn, 
-                    updatedBook.getId(),
-                    updatedBook.getIsbn13()
-                );
-            }
+                // Validate that every author in the updated book exists
+                for (int authorId : updatedAuthors) {
+                    if (!authorRepository.existsById(conn, authorId)) {
+                        throw new EntryNotFoundException(
+                            "No author was found with id: " + authorId
+                        );
+                    }
+                }
 
-            // Update page count
-            if(updatedBook.getPageCount() != currentBook.getPageCount()) {
-                bookRepository.updatePageCount(
-                    conn, 
-                    updatedBook.getId(),
-                    updatedBook.getPageCount()
-                );
-            }
+                // Authors in updated book but not in current list
+                Set<Integer> linksToCreate = new HashSet<>(updatedAuthors);
+                linksToCreate.removeAll(currentAuthors);
 
-            // Update description
-            if(!updatedBook.getDescription().equals(currentBook.getDescription())) {
-                bookRepository.updateDescription(
-                    conn, 
-                    updatedBook.getId(),
-                    updatedBook.getDescription()
-                );
-            }
+                // Authors in current list but not in updated book
+                Set<Integer> linksToDelete = new HashSet<>(currentAuthors);
+                linksToDelete.removeAll(updatedAuthors);
 
-            // If there is an author in the new book that is not in the database, add it
+                // Update title
+                if (!Objects.equals(
+                        updatedBook.getTitle(),
+                        currentBook.getTitle())) {
 
+                    bookRepository.updateTitle(
+                        conn,
+                        bookId,
+                        updatedBook.getTitle()
+                    );
+                }
 
-            // Make new links
-            for(int id : linksToCreate) {
+                // Update ISBN10
+                if (!Objects.equals(
+                        updatedBook.getIsbn10(),
+                        currentBook.getIsbn10())) {
 
-                bookAuthorsRepository.createNewRelation(
-                    conn,
-                    updatedBook.getId(),
-                    id
-                );
-            }
+                    bookRepository.updateIsbn10(
+                        conn,
+                        bookId,
+                        updatedBook.getIsbn10()
+                    );
+                }
 
-            // Delete broken links
-            for(int id : linksToDelete) {
-                bookAuthorsRepository.deleteRelation(
-                    conn,
-                    updatedBook.getId(),
-                    id
-                );
+                // Update ISBN13
+                if (!Objects.equals(
+                        updatedBook.getIsbn13(),
+                        currentBook.getIsbn13())) {
+
+                    bookRepository.updateIsbn13(
+                        conn,
+                        bookId,
+                        updatedBook.getIsbn13()
+                    );
+                }
+
+                // Update page count
+                if (updatedBook.getPageCount() != currentBook.getPageCount()) {
+                    bookRepository.updatePageCount(
+                        conn,
+                        bookId,
+                        updatedBook.getPageCount()
+                    );
+                }
+
+                // Update description
+                if (!Objects.equals(
+                        updatedBook.getDescription(),
+                        currentBook.getDescription())) {
+
+                    bookRepository.updateDescription(
+                        conn,
+                        bookId,
+                        updatedBook.getDescription()
+                    );
+                }
+
+                // Create new author-book relationships
+                for (int authorId : linksToCreate) {
+                    bookAuthorsRepository.createNewRelation(
+                        conn,
+                        bookId,
+                        authorId
+                    );
+                }
+
+                // Delete obsolete author-book relationships
+                for (int authorId : linksToDelete) {
+                    bookAuthorsRepository.deleteRelation(
+                        conn,
+                        bookId,
+                        authorId
+                    );
+                }
+
+                // Commit all changes together
+                conn.commit();
+
+            } catch (
+                SQLException |
+                ClientMadeBookException |
+                InvalidAuthorException |
+                InvalidBookException |
+                EntryNotFoundException |
+                InvalidISBNException |
+                DuplicateEntryException |
+                RuntimeException e
+            ) {
+                conn.rollback();
+                throw e;
             }
         }
     }
 
-    /* Add new book and authors */
+    /* Add new book with authors */
+
+    public void insertBook(Book book)
+        throws SQLException,
+               InvalidAuthorException,
+               InvalidISBNException,
+               DuplicateEntryException,
+               InvalidBookException {
+
+        if (book == null) {
+            throw new InvalidBookException("This book is null");
+        }
+
+        if (book.getAuthors() == null) {
+            throw new InvalidBookException(
+                "The book's author list is null!"
+            );
+        }
+
+        try (Connection conn = Database.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try {
+                // Check ISBN uniqueness
+                if (book.getIsbn13() != null &&
+                        bookRepository.existsByISBN(conn, book.getIsbn13())) {
+                    throw new DuplicateEntryException(
+                        "A book with this ISBN-13 already exists"
+                    );
+                }
+
+                if (book.getIsbn10() != null &&
+                        bookRepository.existsByISBN(conn, book.getIsbn10())) {
+                    throw new DuplicateEntryException(
+                        "A book with this ISBN-10 already exists"
+                    );
+                }
+
+                // Insert book and retrieve its generated ID
+                int bookId = bookRepository.insert(conn, book);
+
+                // Insert authors and collect their generated IDs
+                Set<Integer> authorIds = new HashSet<>();
+
+                for (Author author : book.getAuthors()) {
+                    if(author == null) {
+                        throw new InvalidAuthorException("The book contains a null author");
+                    }
+
+                    int authorId;
+
+                    if(authorRepository.existsByName(conn, author.getName())) {
+                        authorId = author.getId();
+                    }else {
+                        authorId = authorRepository.insert(conn, author);
+                        author.setId(authorId);
+                    }
+
+                    authorIds.add(authorId);
+                }
+
+                // Create book-author relationships
+                for (int authorId : authorIds) {
+                    bookAuthorsRepository.createNewRelation(
+                        conn,
+                        bookId,
+                        authorId
+                    );
+                }
+
+                // Commit all database changes
+                conn.commit();
+
+                // Assign the generated ID after successful commit
+                book.setId(bookId);
+
+            } catch (
+                SQLException |
+                InvalidAuthorException |
+                InvalidISBNException |
+                InvalidBookException |
+                DuplicateEntryException |
+                RuntimeException e
+            ) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackException) {
+                    e.addSuppressed(rollbackException);
+                }
+
+                throw e;
+            }
+        }
+    }
+
+    /* Delete book */
+
+    public void deleteBook(int bookId) throws SQLException, EntryNotFoundException {
+        try(Connection conn = Database.getConnection()) {
+            bookRepository.deleteById(conn, bookId);            
+        }
+    }
 
 
     /* Utility */

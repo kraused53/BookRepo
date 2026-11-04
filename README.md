@@ -72,7 +72,7 @@ This is what I plan to implement (and unit test) before setting up the api syste
   - [X] Fetch List Of All Books With Their Authors Filled In or Not
   - [ ] Create A New Book And New Authors By Passing Book Object With Author Objects Filled In
   - [X] Update New Book By Passing Book Object With Author Objects Filled In
-  - [ ] Delete Book By Passing Book Id
+  - [X] Delete Book By Passing Book Id
   - [X] Passthroughs For The Above Read Operations
    - [X] Fetch book by id
    - [X] Fetch book by isbn
